@@ -3,6 +3,10 @@
 Created on Sun Oct 31 23:19:42 2021
 
 @author: sean
+
+v 1.0.1a @024-04-27
+
+Fixed Full System bug when button pressed twice in a row
 """
 
 import logging
@@ -415,6 +419,8 @@ def make_win1():
               sg.Button('Culture', key=('-CULTURE-')),
               sg.Button('Trade', key=('-TRADE-')),
               sg.VSeparator(),
+              sg.Button('Notes', key=('-NOTES-')),
+              sg.VSeparator(),
               sg.Button('Exit'),
         ],
         [sg.HSeparator(), 
@@ -763,6 +769,8 @@ e_tooltips = ['World Trade Number (GURPS Far Trader)',
 # Create the Window
 # ------------------------------------------------------------------------------
 
+
+
 window1, window2, window3, window4 = make_win1(), None, None, None  # start off with 1 window open
 
 # Event Loop to process "events" and get the "values" of the inputs
@@ -873,6 +881,7 @@ while True:
 
     if event == '-MAIN-':
         detail_flag = 'main_world'
+        
         window['-LOCATIONS-'].update(option_list)
         
         
@@ -1012,33 +1021,37 @@ while True:
             logging.debug('Failed Trade button')        
             
     elif event == '-SYSTEM-':
-        try:
-            logging.debug('pressed SYSTEM')
-            detail_flag = 'exo_world'
-            
-            
-            loc_info = df_exo.loc[df_exo['location_orb'] == location_orb_name]
-            detail_info = df_exo_details[df_exo_details['location_orb'] == location_orb_name]
-            economic_info = df_economic[df_economic['location'] == location]
-            
-
-            exo_location_orb_name = values['-LOCATIONS-'][0]
-            exo_location = values['-LOCATIONS-'][0][0:4]
-           
-            exo_loc_info = df_exo.loc[df_exo['location'] == location]
-            exo_detail_info = df_details[df_details['location'] == location]
-
-            economic_info = df_economic[df_economic['location'] == location]            
-            economic_info['exchange'] = round(economic_info['exchange'],2)  # otherwise crazy decimals added    
-
-            exo_loc_info['loc_name'] = exo_loc_info['location_orb'] 
-
-            exo_list = list(exo_loc_info['loc_name'])
-            exo_list.sort()
-            window['-LOCATIONS-'].update(exo_list)               
-
-        except:
-            logging.debug('Failed System button.  Location was:',location)
+        if detail_flag == 'main_world':
+            try:
+                detail_flag = 'full_system'
+                logging.debug('pressed SYSTEM')
+                detail_flag = 'exo_world'
+                
+                
+                loc_info = df_exo.loc[df_exo['location_orb'] == location_orb_name]
+                detail_info = df_exo_details[df_exo_details['location_orb'] == location_orb_name]
+                economic_info = df_economic[df_economic['location'] == location]
+                
+    
+                exo_location_orb_name = values['-LOCATIONS-'][0]
+                exo_location = values['-LOCATIONS-'][0][0:4]
+               
+                exo_loc_info = df_exo.loc[df_exo['location'] == location]
+                exo_detail_info = df_details[df_details['location'] == location]
+    
+                economic_info = df_economic[df_economic['location'] == location]            
+                economic_info['exchange'] = round(economic_info['exchange'],2)  # otherwise crazy decimals added    
+    
+                exo_loc_info['loc_name'] = exo_loc_info['location_orb'] 
+    
+                exo_list = list(exo_loc_info['loc_name'])
+                exo_list.sort()
+                window['-LOCATIONS-'].update(exo_list)               
+    
+            except:
+                logging.debug('Failed System button.  Location was:',location)
+        else:
+            logging.debug('Full system pressed.  Already in Full System')
 
     elif event == '-MAP-':
         try:  
@@ -1052,6 +1065,13 @@ while True:
  
         except:
             logging.debug('Failed draw_map()')
+            
+    elif event == '-NOTES-':
+        try:  
+            sg.Popup('Coming soon')
+ 
+        except:
+            logging.debug('Failed notes()')
 
 conn.commit()  
 c.close()
