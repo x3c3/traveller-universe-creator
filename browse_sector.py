@@ -4,13 +4,15 @@ Created on Sun Oct 31 23:19:42 2021
 
 @author: sean
 
-v 1.0.1a @024-04-27
+v 1.0.1a 2024-04-27  Fixed Full System bug when button pressed twice in a row
+v 1.1.0  2024-04-27  Starting work on adding world map and traveller map
 
-Fixed Full System bug when button pressed twice in a row
 """
 
 import logging
 import warnings
+import requests
+import platform
 
 import PySimpleGUI as sg
 import sqlite3
@@ -20,6 +22,7 @@ from PIL import Image, ImageTk
 import os
 import io
 
+import webbrowser
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -90,6 +93,11 @@ def clear_images():
 
 def add_image(image_var):
         window[image_var].unhide_row()
+        
+def save_downloaded_image(response, png_name):
+  """Saves the downloaded image content to a file."""
+  with open(png_name, 'wb') as f:
+    f.write(response.content)        
         
         
 def select_images(loc_info,system_info,detail_info,economic_info):
@@ -419,7 +427,8 @@ def make_win1():
               sg.Button('Culture', key=('-CULTURE-')),
               sg.Button('Trade', key=('-TRADE-')),
               sg.VSeparator(),
-              sg.Button('Notes', key=('-NOTES-')),
+              sg.Button('World Map', key=('-WORLDMAP-')),
+              sg.Button('Traveller Map', key=('-TRAVELLERMAP-')),
               sg.VSeparator(),
               sg.Button('Exit'),
         ],
@@ -441,7 +450,7 @@ def make_win1():
          ],
         
     ]
-    return sg.Window("""Bartleby's Sector Builder v 1.0""", layout,size=(1300,700),finalize=True)
+    return sg.Window("""Bartleby's Sector Builder v 1.1.0""", layout,size=(1300,700),finalize=True)
 
 
 
@@ -948,7 +957,8 @@ while True:
 
                 fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, f)
 
-            except:
+            except Exception as e:
+                logging.debug(e)
                 logging.debug('Failed Map button')
                     
 
@@ -1017,13 +1027,12 @@ while True:
             window4 = make_win4(needs_list,wants_list,location)
 
         except Exception as e:
-            print(e)
+            logging.debug(e)
             logging.debug('Failed Trade button')        
             
     elif event == '-SYSTEM-':
         if detail_flag == 'main_world':
             try:
-                detail_flag = 'full_system'
                 logging.debug('pressed SYSTEM')
                 detail_flag = 'exo_world'
                 
@@ -1063,15 +1072,114 @@ while True:
 
             fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, f)
  
-        except:
+        except Exception as e:
+            # Access the error message using e.args or str(e)
+            logging.debug(f"Error: {e}")  # Example usage
             logging.debug('Failed draw_map()')
             
-    elif event == '-NOTES-':
-        try:  
-            sg.Popup('Coming soon')
+    elif event == '-WORLDMAP-':
+
+        try:
+            logging.debug('pressed World Map ' + location)
+            logging.debug('location_orb_name: '+ location_orb_name)
+            main_url = 'https://www.travellerworlds.com/?'
+
+            
+            # UWP
+            url_name = loc_info.iloc[0]['system_name']
+            url_hex = location
+            hex_starport = loc_info.iloc[0]['starport']
+            hex_size = tohex(loc_info.iloc[0]['size'])
+            hex_atmo = tohex(loc_info.iloc[0]['atmosphere'])
+            hex_hydro = tohex(loc_info.iloc[0]['hydrographics'])
+            hex_pop = tohex(loc_info.iloc[0]['population'])
+            hex_gov = tohex(loc_info.iloc[0]['government'])
+            hex_law = tohex(loc_info.iloc[0]['law'])
+            hex_tech = tohex(loc_info.iloc[0]['tech_level'])
+            
+            # T5 numbers
+            map_ix = system_info.iloc[0]['ix']
+            map_ex = system_info.iloc[0]['ex']
+            map_cx = system_info.iloc[0]['cx']
+            map_pbg = system_info.iloc[0]['pbg']
+            map_worlds = system_info.iloc[0]['w']
+            map_bases = system_info.iloc[0]['w']
+            map_zone = system_info.iloc[0]['zone']
+            map_nobz = system_info.iloc[0]['n']
+            map_stars = system_info.iloc[0]['stars']
+            
+            
+            
+            logging.debug('Mapping URL')
+            url_uwp = hex_starport+hex_size+hex_atmo+hex_hydro+hex_pop+hex_gov+hex_law+'-'+hex_tech
+            url = main_url + 'name=' + url_name + '&uwp=' + url_uwp + '&hex=' + location
+            url += '&system=' + location_orb_name + '&seed=' + location_orb_name
+            url += '&eiX=' + map_ix + '&eX=' + map_ex + '&cX=' + map_cx 
+            url += '&pbg=' + map_pbg + '&worlds=' + map_worlds + '&bases' + map_bases
+            url += '&travelZone=' + map_zone + '&nobz=' + map_nobz + '&stellar=' + map_stars
+            
+            
+            logging.debug('url: '+ url)
+            webbrowser.open(url)
  
         except:
-            logging.debug('Failed notes()')
+            logging.debug('World Map info not available')
+
+    
+    
+    elif event == '-TRAVELLERMAP-':
+        try:
+          logging.debug('Traveller Sector Map ' + db_name)
+          tab = db_name + '_tab.txt'  # Only data file needed
+          routes = db_name + '_routes.txt'  # Only data file needed
+        
+        # API endpoint
+          url = "https://travellermap.com/api/poster?style=print"
+          
+          # Files to upload
+          files = {
+              'file': open(tab, 'rb'),
+              'metadata': open(routes, 'rb')
+          }
+          
+          try:
+            response = requests.post(url, files=files)
+            response.raise_for_status()  # Raise exception for non-200 status codes
+            
+            # Check if response is binary data (optional)
+            if 'Content-Type' in response.headers and response.headers['Content-Type'].startswith('image/'):
+                # Handle binary response (e.g., save image to file)
+                png_name = db_name + '.sector_map.png'
+                save_downloaded_image(response, png_name)
+                logging.debug("File Saved")
+                sg.Popup('Map file saved to sector directory')
+                
+                
+                # Open the downloaded image using the system's default application
+
+                if platform.system() == "Windows":  # Windows specific
+                    logging.debug("Platform is windows - opening file")
+                    os.startfile(png_name)
+                else:  # Attempt to use a generic approach for other OSes (might require additional libraries)
+                    logging.debug("Platform is not windows - file is saved")
+ 
+                
+                
+                
+                
+            else:
+                # Handle non-binary response (e.g., JSON)
+                data = response.json()
+                logging.debug(data)
+                    
+          except requests.exceptions.RequestException as e:
+              logging.debug(f"Error: {e}")
+
+
+
+        except:
+          logging.debug('Failed Traveller Map')
+
 
 conn.commit()  
 c.close()
