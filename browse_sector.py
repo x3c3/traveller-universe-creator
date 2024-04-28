@@ -5,7 +5,8 @@ Created on Sun Oct 31 23:19:42 2021
 @author: sean
 
 v 1.0.1a 2024-04-27  Fixed Full System bug when button pressed twice in a row
-v 1.1.0  2024-04-27  Starting work on adding world map and traveller map
+v 1.1.0  2024-04-27  API connections to traveller maps
+v 1.1.0a  2024-04-28  Fixed error when clicking Full System without mainworld selected
 
 """
 
@@ -1031,9 +1032,10 @@ while True:
             logging.debug('Failed Trade button')        
             
     elif event == '-SYSTEM-':
-        if detail_flag == 'main_world':
+        if detail_flag == 'main_world' and location is not None and \
+        location !='-99' and values['-LOCATIONS-'][0] is not None :
             try:
-                logging.debug('pressed SYSTEM')
+                logging.debug('pressed SYSTEM with location: '+location+'.  --LOCATIONS--' + values['-LOCATIONS-'][0])
                 detail_flag = 'exo_world'
                 
                 
@@ -1060,7 +1062,7 @@ while True:
             except:
                 logging.debug('Failed System button.  Location was:',location)
         else:
-            logging.debug('Full system pressed.  Already in Full System')
+            logging.debug('Full system pressed but no mainworld selected')
 
     elif event == '-MAP-':
         try:  
