@@ -2,12 +2,11 @@
 """
 Created on Sun Oct 31 23:19:42 2021
 
-@author: sean
-
 v 1.0.1a 2024-04-27  Fixed Full System bug when button pressed twice in a row
 v 1.1.0  2024-04-27  API connections to traveller maps
 v 1.1.0a  2024-04-28  Fixed error when clicking Full System without mainworld selected
-
+v 1.1.0b  2024-05-04  1. Fixed another error when clicking Full System without mainworld selected
+                      2. Added confirmation windows for traveller map buttons  
 """
 
 import logging
@@ -429,7 +428,7 @@ def make_win1():
               sg.Button('Trade', key=('-TRADE-')),
               sg.VSeparator(),
               sg.Button('World Map', key=('-WORLDMAP-')),
-              sg.Button('Traveller Map', key=('-TRAVELLERMAP-')),
+              sg.Button('Sector Map', key=('-TRAVELLERMAP-')),
               sg.VSeparator(),
               sg.Button('Exit'),
         ],
@@ -451,7 +450,7 @@ def make_win1():
          ],
         
     ]
-    return sg.Window("""Bartleby's Sector Builder v 1.1.0""", layout,size=(1300,700),finalize=True)
+    return sg.Window("""Bartleby's Sector Builder v 1.1.0b""", layout,size=(1300,700),finalize=True)
 
 
 
@@ -591,6 +590,25 @@ def make_win4(needs_list,wants_list,location):
         
             
     return sg.Window('Trade Goods, Frequently Needed and Surplus System Wide',goods_layout,size=(350,250),finalize=True) 
+
+
+def confirm_window(message_text):
+    """
+    Creates a confirmation window with "Continue" and "Cancel" buttons.
+    Returns True if "Continue" is pressed, False otherwise.
+    Provide message text to the function.
+    """
+    layout = [
+        [sg.Text(message_text)],
+        [sg.Button("Continue"), sg.Button("Cancel")]
+    ]
+    
+    window = sg.Window("Confirmation", layout)
+    event, values = window.read()
+    window.close()
+    
+    return event == "Continue"
+    
 
 # ------------------------------- MATPLOTLIB CODE HERE -------------------------------
 
@@ -1032,8 +1050,7 @@ while True:
             logging.debug('Failed Trade button')        
             
     elif event == '-SYSTEM-':
-        if detail_flag == 'main_world' and location is not None and \
-        location !='-99' and values['-LOCATIONS-'][0] is not None :
+        if detail_flag == 'main_world' and location is not None and location !='-99':
             try:
                 logging.debug('pressed SYSTEM with location: '+location+'.  --LOCATIONS--' + values['-LOCATIONS-'][0])
                 detail_flag = 'exo_world'
@@ -1060,9 +1077,9 @@ while True:
                 window['-LOCATIONS-'].update(exo_list)               
     
             except:
-                logging.debug('Failed System button.  Location was:',location)
+                logging.debug('Full system chosen but no mainworld selected (1062)')
         else:
-            logging.debug('Full system pressed but no mainworld selected')
+            logging.debug('Full system chosen but no mainworld selected (1064)')
 
     elif event == '-MAP-':
         try:  
@@ -1080,108 +1097,115 @@ while True:
             logging.debug('Failed draw_map()')
             
     elif event == '-WORLDMAP-':
-
-        try:
-            logging.debug('pressed World Map ' + location)
-            logging.debug('location_orb_name: '+ location_orb_name)
-            main_url = 'https://www.travellerworlds.com/?'
-
+        
+        if confirm_window('Would you like me to open a web page with a world map?'):
             
-            # UWP
-            url_name = loc_info.iloc[0]['system_name']
-            url_hex = location
-            hex_starport = loc_info.iloc[0]['starport']
-            hex_size = tohex(loc_info.iloc[0]['size'])
-            hex_atmo = tohex(loc_info.iloc[0]['atmosphere'])
-            hex_hydro = tohex(loc_info.iloc[0]['hydrographics'])
-            hex_pop = tohex(loc_info.iloc[0]['population'])
-            hex_gov = tohex(loc_info.iloc[0]['government'])
-            hex_law = tohex(loc_info.iloc[0]['law'])
-            hex_tech = tohex(loc_info.iloc[0]['tech_level'])
-            
-            # T5 numbers
-            map_ix = system_info.iloc[0]['ix']
-            map_ex = system_info.iloc[0]['ex']
-            map_cx = system_info.iloc[0]['cx']
-            map_pbg = system_info.iloc[0]['pbg']
-            map_worlds = system_info.iloc[0]['w']
-            map_bases = system_info.iloc[0]['w']
-            map_zone = system_info.iloc[0]['zone']
-            map_nobz = system_info.iloc[0]['n']
-            map_stars = system_info.iloc[0]['stars']
-            
-            
-            
-            logging.debug('Mapping URL')
-            url_uwp = hex_starport+hex_size+hex_atmo+hex_hydro+hex_pop+hex_gov+hex_law+'-'+hex_tech
-            url = main_url + 'name=' + url_name + '&uwp=' + url_uwp + '&hex=' + location
-            url += '&system=' + location_orb_name + '&seed=' + location_orb_name
-            url += '&eiX=' + map_ix + '&eX=' + map_ex + '&cX=' + map_cx 
-            url += '&pbg=' + map_pbg + '&worlds=' + map_worlds + '&bases' + map_bases
-            url += '&travelZone=' + map_zone + '&nobz=' + map_nobz + '&stellar=' + map_stars
-            
-            
-            logging.debug('url: '+ url)
-            webbrowser.open(url)
- 
-        except:
-            logging.debug('World Map info not available')
-
+            logging.debug('confirmed world map')
+            try:
+                logging.debug('pressed World Map ' + location)
+                logging.debug('location_orb_name: '+ location_orb_name)
+                main_url = 'https://www.travellerworlds.com/?'
     
+                
+                # UWP
+                url_name = loc_info.iloc[0]['system_name']
+                url_hex = location
+                hex_starport = loc_info.iloc[0]['starport']
+                hex_size = tohex(loc_info.iloc[0]['size'])
+                hex_atmo = tohex(loc_info.iloc[0]['atmosphere'])
+                hex_hydro = tohex(loc_info.iloc[0]['hydrographics'])
+                hex_pop = tohex(loc_info.iloc[0]['population'])
+                hex_gov = tohex(loc_info.iloc[0]['government'])
+                hex_law = tohex(loc_info.iloc[0]['law'])
+                hex_tech = tohex(loc_info.iloc[0]['tech_level'])
+                
+                # T5 numbers
+                map_ix = system_info.iloc[0]['ix']
+                map_ex = system_info.iloc[0]['ex']
+                map_cx = system_info.iloc[0]['cx']
+                map_pbg = system_info.iloc[0]['pbg']
+                map_worlds = system_info.iloc[0]['w']
+                map_bases = system_info.iloc[0]['w']
+                map_zone = system_info.iloc[0]['zone']
+                map_nobz = system_info.iloc[0]['n']
+                map_stars = system_info.iloc[0]['stars']
+                
+                
+                
+                logging.debug('Mapping URL')
+                url_uwp = hex_starport+hex_size+hex_atmo+hex_hydro+hex_pop+hex_gov+hex_law+'-'+hex_tech
+                url = main_url + 'name=' + url_name + '&uwp=' + url_uwp + '&hex=' + location
+                url += '&system=' + location_orb_name + '&seed=' + location_orb_name
+                url += '&eiX=' + map_ix + '&eX=' + map_ex + '&cX=' + map_cx 
+                url += '&pbg=' + map_pbg + '&worlds=' + map_worlds + '&bases' + map_bases
+                url += '&travelZone=' + map_zone + '&nobz=' + map_nobz + '&stellar=' + map_stars
+                
+                
+                logging.debug('url: '+ url)
+                webbrowser.open(url)
+     
+            except:
+                logging.debug('World Map info not available')
+
+        else:
+            logging.debug('cancelled world map')
     
     elif event == '-TRAVELLERMAP-':
-        try:
-          logging.debug('Traveller Sector Map ' + db_name)
-          tab = db_name + '_tab.txt'  # Only data file needed
-          routes = db_name + '_routes.txt'  # Only data file needed
-        
-        # API endpoint
-          url = "https://travellermap.com/api/poster?style=print"
-          
-          # Files to upload
-          files = {
-              'file': open(tab, 'rb'),
-              'metadata': open(routes, 'rb')
-          }
-          
-          try:
-            response = requests.post(url, files=files)
-            response.raise_for_status()  # Raise exception for non-200 status codes
+        if confirm_window('Would you like me to download the sector map image from travellermap.com?'):
+            logging.debug('confirmed sector map')
+            try:
+              logging.debug('Traveller Sector Map ' + db_name)
+              tab = db_name + '_tab.txt'  # Only data file needed
+              routes = db_name + '_routes.txt'  # Only data file needed
             
-            # Check if response is binary data (optional)
-            if 'Content-Type' in response.headers and response.headers['Content-Type'].startswith('image/'):
-                # Handle binary response (e.g., save image to file)
-                png_name = db_name + '.sector_map.png'
-                save_downloaded_image(response, png_name)
-                logging.debug("File Saved")
-                sg.Popup('Map file saved to sector directory')
+            # API endpoint
+              url = "https://travellermap.com/api/poster?style=print"
+              
+              # Files to upload
+              files = {
+                  'file': open(tab, 'rb'),
+                  'metadata': open(routes, 'rb')
+              }
+              
+              try:
+                response = requests.post(url, files=files)
+                response.raise_for_status()  # Raise exception for non-200 status codes
                 
-                
-                # Open the downloaded image using the system's default application
-
-                if platform.system() == "Windows":  # Windows specific
-                    logging.debug("Platform is windows - opening file")
-                    os.startfile(png_name)
-                else:  # Attempt to use a generic approach for other OSes (might require additional libraries)
-                    logging.debug("Platform is not windows - file is saved")
- 
-                
-                
-                
-                
-            else:
-                # Handle non-binary response (e.g., JSON)
-                data = response.json()
-                logging.debug(data)
+                # Check if response is binary data (optional)
+                if 'Content-Type' in response.headers and response.headers['Content-Type'].startswith('image/'):
+                    # Handle binary response (e.g., save image to file)
+                    png_name = db_name + '.sector_map.png'
+                    save_downloaded_image(response, png_name)
+                    logging.debug("File Saved")
+                    sg.Popup('Map file saved to sector directory')
                     
-          except requests.exceptions.RequestException as e:
-              logging.debug(f"Error: {e}")
-
-
-
-        except:
-          logging.debug('Failed Traveller Map')
-
+                    
+                    # Open the downloaded image using the system's default application
+    
+                    if platform.system() == "Windows":  # Windows specific
+                        logging.debug("Platform is windows - opening file")
+                        os.startfile(png_name)
+                    else:  # Attempt to use a generic approach for other OSes (might require additional libraries)
+                        logging.debug("Platform is not windows - file is saved")
+     
+                    
+                    
+                    
+                    
+                else:
+                    # Handle non-binary response (e.g., JSON)
+                    data = response.json()
+                    logging.debug(data)
+                        
+              except requests.exceptions.RequestException as e:
+                  logging.debug(f"Error: {e}")
+    
+    
+    
+            except:
+              logging.debug('Failed Traveller Map')
+        else:
+            logging.debug('cancelled sector map')
 
 conn.commit()  
 c.close()
