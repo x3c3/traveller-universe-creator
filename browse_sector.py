@@ -7,6 +7,7 @@ v 1.1.0  2024-04-27  API connections to traveller maps
 v 1.1.0a  2024-04-28  Fixed error when clicking Full System without mainworld selected
 v 1.1.0b  2024-05-04  1. Fixed another error when clicking Full System without mainworld selected
                       2. Added confirmation windows for traveller map buttons  
+v 1.1.0c  2024-05-05  Added ring information for each orbital body                      
 """
 
 import logging
@@ -450,7 +451,7 @@ def make_win1():
          ],
         
     ]
-    return sg.Window("""Bartleby's Sector Builder v 1.1.0b""", layout,size=(1300,700),finalize=True)
+    return sg.Window("""Bartleby's Sector Builder v 1.1.0c""", layout,size=(1300,700),finalize=True)
 
 
 
@@ -729,7 +730,7 @@ s_tooltips = ['T5 Trade Classifications',
 
 new_detail_sql_query = '''SELECT t.system_name, t.location, o.body, o.wtype as type, o.day, o.year,
 o.gravity, o.atmos_pressure, o.atmos_composition, o.temperature, o.climate, 
-o.impact_moons, o.natural_moons,
+o.impact_moons, o.natural_moons, ring,
 j.stellar_distance as stellar_distance, 
 j.jump_point_Mm as jump_point_distance, 
 j.planet_stellar_masked as stellar_mask,
@@ -871,7 +872,7 @@ while True:
         exo_detail_sql_query = '''SELECT t.system_name, t.location, t.location_orb, 
         o.body, o.wtype as type, o.day, o.year,
         o.gravity, o.atmos_pressure, o.atmos_composition, o.temperature, o.climate, 
-        o.impact_moons, o.natural_moons,
+        o.impact_moons, o.natural_moons, ring,
         j.stellar_distance as stellar_distance, 
         j.jump_point_Mm as jump_point_distance, 
         j.planet_stellar_masked as stellar_mask,
@@ -890,7 +891,8 @@ while True:
 
         df_exo_details['atmos_pressure'] = round(df_exo_details['atmos_pressure'],2)
         df_exo_details['jump_point_distance'] = round(df_exo_details['jump_point_distance'],1)
-        df_exo_details['mainworld_calc'] = round(df_exo_details['mainworld_calc'],2)   
+        df_exo_details['mainworld_calc'] = round(df_exo_details['mainworld_calc'],2) 
+
 
 
 
@@ -1125,7 +1127,7 @@ while True:
                 map_cx = system_info.iloc[0]['cx']
                 map_pbg = system_info.iloc[0]['pbg']
                 map_worlds = system_info.iloc[0]['w']
-                map_bases = system_info.iloc[0]['w']
+                map_bases = system_info.iloc[0]['bases']
                 map_zone = system_info.iloc[0]['zone']
                 map_nobz = system_info.iloc[0]['n']
                 map_stars = system_info.iloc[0]['stars']

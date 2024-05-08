@@ -16,10 +16,8 @@ def tohex(dec):
     if dec > 15: dec = 15
     x = (dec % 16)
     digits = "0123456789ABCDEF"
-    #rest = dec / 16
-    # if (rest == 0):
     return digits[int(x)]
-    # return tohex(rest) + digits[int(x)]
+
     
 def hex_to_int(hex_val):
     response = -1
@@ -181,3 +179,62 @@ def get_description(upp_type,upp_value):
     else:
         description = dy_upp[upp_value]     
     return description
+
+
+def get_subsector_number_list(subsector):
+    
+    def get_string(num):
+        str_num = str(num)
+        if len(str_num) == 1: str_num = '0' + str_num
+        return str_num
+        
+    def get_ranges(front_limits,back_limits):
+        return (range(front_limits[0],front_limits[1]+1), range(back_limits[0], back_limits[1]+1))
+    
+    
+    subsector_number_list = []
+    
+
+    subsector_letter_dictionary = {
+        'A': [[1,8],[1,10]],   
+        'B': [[9,16],[1,10]],
+        'C': [[17,24],[1,10]],
+        'D': [[25,32],[1,10]],
+        
+        'E': [[1,8],[11,20]],
+        'F': [[9,16],[11,20]],
+        'G': [[17,24],[11,20]],
+        'H': [[25,32],[11,20]],
+              
+        'I': [[1,8],[21,30]],
+        'J': [[9,16],[21,30]],
+        'K': [[17,24],[21,30]],
+        'L': [[25,32],[21,30]],
+        
+        'M': [[1,8],[31,40]],
+        'N': [[9,16],[31,40]],
+        'O': [[17,24],[31,40]],
+        'P': [[25,32],[31,40]]
+        
+        }
+    
+
+            
+    front_limits = subsector_letter_dictionary[subsector][0]
+    back_limits = subsector_letter_dictionary[subsector][1]
+    front_digits, back_digits = get_ranges(front_limits,back_limits)
+
+
+
+    for each_front in front_digits:
+        for each_back in back_digits:
+            front_str = get_string(each_front)
+            back_str = get_string(each_back)
+            subsector_number_list.append(front_str+back_str) 
+    
+    return subsector_number_list
+
+            
+            
+            
+        
