@@ -30,7 +30,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib import style
 
-from traveller_functions import tohex, get_description
+from traveller_functions import tohex, get_description, get_remarks_list
 
 try:    
     import pyi_splash
@@ -137,6 +137,8 @@ def select_images(loc_info,system_info,detail_info,economic_info):
         add_image('naval')
     if 'S' in bases or 'B' in bases:
         add_image('scout')
+        
+    remarks_list = get_remarks_list()    
     for rem in remarks_list:
         if rem[0] in list(system_info['remarks'])[0]: add_image(rem[1])
         
@@ -671,11 +673,7 @@ list_images = [['mask','Completely Stellar Masked'],
                ]
 
 
-remarks_list = [['In', 'industrial'],
-                ['Ag', 'agricultural'],
-                ['Hi', 'hipop'],
-                ['Px', 'prison']]
-                
+          
 
 conn = sqlite3.connect(db_name)
 c = conn.cursor()

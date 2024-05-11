@@ -7,6 +7,15 @@ Created on Thu Dec  2 16:35:43 2021
 
 import random
 
+
+# used for images on browser and export
+def get_remarks_list():
+    remarks_list = [['In', 'industrial'],
+                    ['Ag', 'agricultural'],
+                    ['Hi', 'hipop'],
+                    ['Px', 'prison']]
+    return remarks_list
+
 def integer_root(expo,num):
     num = float(num)
     root_expo = 1/expo
@@ -234,7 +243,135 @@ def get_subsector_number_list(subsector):
     
     return subsector_number_list
 
+
+class Culture_details:
+    def __init__(self,
+                 age, 
+                 appearance,
+                 tendency, 
+                 materialism, 
+                 honesty, 
+                 bravery, 
+                 social_conflict, 
+                 work_ethic, 
+                 consumerism,
+                 spiritual_outlook, 
+                 status_quo_outlook, 
+                 custom, 
+                 interest,
+                 common_skills,
+                 materialism_symbol=None,
+                 honesty_symbol=None,
+                 bravery_symbol=None,
+                 social_conflict_symbol=None,
+                 work_ethic_symbol=None,
+                 consumerism_symbol=None):
+        self.age = age
+        self.appearance = appearance
+        self.tendency = tendency
+        self.materialism = materialism
+        self.honesty = honesty
+        self.bravery = bravery
+        self.social_conflict = social_conflict
+        self.work_ethic = work_ethic
+        self.consumerism = consumerism
+        self.spiritual_outlook = spiritual_outlook
+        self.status_quo_outlook = status_quo_outlook
+        self.custom = custom
+        self.interest = interest
+        self.common_skills = common_skills
+        self.materialism_symbol = materialism_symbol
+        self.honesty_symbol = honesty_symbol
+        self.bravery_symbol = bravery_symbol
+        self.social_conflict_symbol = social_conflict_symbol
+        self.work_ethic_symbol = work_ethic_symbol
+        self.consumerism_symbol = consumerism_symbol
             
+    @staticmethod
+    def convert_culture_to_symbol(culture_object):
+     
+        materialism_dict = {
+            'minimal possessions': '--',
+            'average'            : '0',
+            'modest possessions' : '+',
+            'covet possessions'  : '++',
+            'n/a'                : 'n/a'
+        }
+        
+        honesty_dict = {
+            'scrupulous'         : '++',
+            'honour-bound'       : '++',
+            'truthful'           : '+',
+            'average'            : '0',
+            'untrustworthy'      : '-',
+            'deceitful'          : '--',
+            'n/a'                : 'n/a'
             
+        }
+        
+        bravery_dict = {
+            'foolhardy'                  : '++',
+            'brave'                      : '+',
+            'average'                    : '0',
+            'cautious'                   : '-',
+            'reject bravery as an ideal' : '--',
+            'n/a'                : 'n/a'
+    
+            }
+        
+        work_ethic_dict = {
+            'beyond driven'      : '++',
+            'driven'             : '+',
+            'average'            : '0',
+            'relaxed'            : '-',
+            'very relaxed'       : '--',
+            'n/a'                : 'n/a'
+    
+            }
+        
+        social_conflict_dict = {
+            'thrive on conflict'  : '++',
+            'enjoy conflict'      : '+',
+            'average'             : '0',
+            'conflict adverse'    : '-',
+            'conflict phobic'     : '--',
+            'n/a'                : 'n/a'
             
+            }
+        
+        consumerism_dict = {
+            'wasteful'             : '++',
+            'spendthrift'          : '+',
+            'average'              : '0',
+            'miserly'              : '-',
+            'conservative spender' : '--',
+            'n/a'                : 'n/a'
+            
+            }
+        
+        # Update symbol attributes
+        updated_culture_object = Culture_details(
+            culture_object.age,
+            culture_object.appearance,
+            culture_object.tendency,
+            culture_object.materialism,
+            culture_object.honesty,
+            culture_object.bravery,
+            culture_object.social_conflict,
+            culture_object.work_ethic,
+            culture_object.consumerism,
+            culture_object.spiritual_outlook,
+            culture_object.status_quo_outlook,
+            culture_object.custom,
+            culture_object.interest,
+            culture_object.common_skills,
+            materialism_symbol=materialism_dict.get(culture_object.materialism),
+            honesty_symbol=honesty_dict.get(culture_object.honesty),
+            bravery_symbol=bravery_dict.get(culture_object.bravery),
+            social_conflict_symbol=social_conflict_dict.get(culture_object.social_conflict),
+            work_ethic_symbol=work_ethic_dict.get(culture_object.work_ethic),
+            consumerism_symbol=consumerism_dict.get(culture_object.consumerism)
+        )
+                
+        return updated_culture_object
         

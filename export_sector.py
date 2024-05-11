@@ -24,18 +24,21 @@ logging.debug("Debug message")
 print("Check output stream for debug messages")
 
 
-from reportlab.platypus import SimpleDocTemplate,Table, TableStyle, Paragraph, PageBreak, KeepTogether, Spacer
+from reportlab.platypus import SimpleDocTemplate,Table, TableStyle, Paragraph, PageBreak, KeepTogether, Spacer, Image
+
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
+from reportlab.lib.units import inch
 
+from reportlab.lib.enums import TA_CENTER
 
 import sqlite3
+
 import pandas as pd
 
-from traveller_functions import tohex, get_subsector_number_list
-
+from traveller_functions import tohex, get_subsector_number_list, Culture_details, get_remarks_list
 
 
 def get_db():
@@ -53,18 +56,32 @@ def get_location(c):
     sector_locations = c.fetchall()
     first_dimension_list = list(zip(*sector_locations))[0]
     
-    
     subsector_locations = get_subsector_number_list(subsector)
-    
-
     
     intersected_locations = list(set(first_dimension_list).intersection(subsector_locations))
     intersected_locations.sort()
     logging.debug(f"Selected locations: {intersected_locations}")
     
-    
-    
     return intersected_locations
+
+def get_index_names(c, location_list):
+    # Construct the SQL query with parameterized query placeholders
+    placeholders = ','.join(['?' for _ in location_list])  # Ensure locations are strings
+    name_sql = f"SELECT system_name, location_orb FROM traveller_stats WHERE location IN ({placeholders})"
+    
+    # Print list length for verification (optional)
+    print(f"Number of locations in list: {len(location_list)}")
+    
+    # c.rowfactory = sqlite3.Row  # This line should be removed
+
+    
+    # Execute the SQL query with the list of locations as parameters
+    c.execute(name_sql, location_list)
+    index_name_list = c.fetchall()
+    sorted_list = sorted(index_name_list , key=lambda x: x[0])
+    return sorted_list         
+
+
 
 def get_output_file_name():
     return 'sector_test.pdf'
@@ -173,10 +190,13 @@ def get_culture_stats_object(c, location):
         culture_detail_row[0][10],
         culture_detail_row[0][11],
         culture_detail_row[0][12],
-        culture_detail_row[0][13],
+        culture_detail_row[0][13]
         )
     
-    return culture_object
+    culture_object_with_symbols = Culture_details.convert_culture_to_symbol(culture_object)
+    
+   # logging.debug(f"culture object: {culture_object_with_symbols.materialism} - {culture_object_with_symbols.materialism_symbol}")
+    return culture_object_with_symbols
 
 def get_detail_stats_object(c, loc_orb, uwp_dict):
     orbital_detail_row, journey_detail_row = get_detail_stats(c, loc_orb)
@@ -267,7 +287,7 @@ def fix_uwp(df):
     df['ring'] = df['ring'].str[0]
     df['atmos_composition'] = df['atmos_composition'].str[0:2]
     
-    df['uwp'] = df['starport'] + df['size'] + df['hydrographics'] + df['atmosphere'] + \
+    df['uwp'] = df['starport'] + df['size'] + df['atmosphere'] + df['hydrographics'] +  \
         df['population'] + df['government'] + df['law'] + '-' + df['tech_level']
         
         
@@ -418,7 +438,7 @@ def update_summary_elems(text_before_table, summary_table, culture_lines):
 
     # Add the Spacer to your elements list
     return  [
-        PageBreak(),
+        
         text_before_table.header_line,
         text_before_table.t5_line,
         text_before_table.detail_line,        
@@ -429,45 +449,70 @@ def update_summary_elems(text_before_table, summary_table, culture_lines):
         spacer,
         culture_lines.header_line,
         culture_lines.age_line,
-        culture_lines.bravery_line,
         culture_lines.status_quo_line,
+        culture_lines.symbol_line,
         culture_lines.skills_line,
         PageBreak()
     ]
 
 
+# Add page numbers
+def add_page_number(canvas, doc):
+        page_num = canvas.getPageNumber()
+        if page_num != 1:  # Exclude page number from the first page
+            text = "%s" % (page_num - 1)  # Adjust page number if excluding the first page
+            canvas.setFont("Helvetica", 9)
+            # Calculate the center position of the page number at the bottom of the page
+            x = (letter[0] - inch) / 2  # Center horizontally
+            y = 0.75 * inch  # Offset from the bottom
+            canvas.drawString(x, y, text)
 
-class Culture_details:
-    def __init__(self,
-                 age, 
-                 appearance,
-                 tendency, 
-                 materialism, 
-                 honesty, 
-                 bravery, 
-                 social_conflict, 
-                 work_ethic, 
-                 consumerism,
-                 spiritual_outlook, 
-                 status_quo_outlook, 
-                 custom, 
-                 interest,
-                 common_skills):
-        self.age = age
-        self.appearance = appearance
-        self.tendency = tendency
-        self.materialism = materialism
-        self.honesty = honesty
-        self.bravery = bravery
-        self.social_conflict = social_conflict
-        self.work_ethic = work_ethic
-        self.consumerism = consumerism
-        self.spiritual_outlook = spiritual_outlook
-        self.status_quo_outlook = status_quo_outlook
-        self.custom = custom
-        self.interest = interest
-        self.common_skills = common_skills
+
+# Reorder index for columns
+def reorder_for_table(data, num_columns):
+    reordered_data = []
+    num_rows = (len(data) + num_columns - 1) // num_columns  # Calculate the number of rows
+    for i in range(num_rows):
+        for j in range(num_columns):
+            index = j * num_rows + i  # Calculate the new index for column-wise reordering
+            if index < len(data):
+                reordered_data.append(data[index])
+    return reordered_data
+
+
         
+# Generate paragraphs from index entries
+def create_index_paragraphs(index_name_list):
+    for index_entry in index_name_list:
+        cell_content = f"{index_entry[0]}: {index_entry[1]}"
+        yield Paragraph(cell_content, ParagraphStyle(name='IndexEntry', fontSize=7))
+
+
+
+# Generate and add the index table
+def create_index_table(paragraphs):
+    # Define parameters
+    num_columns = 4  # Adjust as needed
+    page_width, page_height = letter
+    # column_width = page_width / num_columns
+    column_width = 120
+
+    # Create table data list (one row per paragraph)
+    table_data = []
+    for i in range(0, len(paragraphs), num_columns):
+        # Create a sublist with "num_columns" paragraphs
+        row_data = paragraphs[i:i + num_columns]
+        table_data.append(row_data)
+
+    # Create table object
+    index_table = Table(table_data, colWidths=[column_width] * num_columns, style=[
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Center all cells vertically
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center the entire table horizontally
+    ])
+
+    return index_table
+
+
     
 class System_details:
     def __init__(self, 
@@ -528,13 +573,13 @@ class Culture_lines:
     def __init__(self,
                  header_line,
                  age_line,
-                 bravery_line,
                  status_quo_line,
+                 symbol_line,
                  skills_line):
         self.header_line = header_line
         self.age_line = age_line
-        self.bravery_line = bravery_line
         self.status_quo_line = status_quo_line
+        self.symbol_line = symbol_line
         self.skills_line = skills_line
         
   
@@ -626,25 +671,126 @@ elems = []
 conn = sqlite3.connect(db_name)
 c = conn.cursor()
 
-# Get locations
+# Gather Data
 location_list = get_location(c)
+index_name_list = get_index_names(c, location_list)
 
-pdf = SimpleDocTemplate(
-    output_file_name,
-    page_size = letter)
+
+
+
+
+# Path to the image file
+image_path = "atomic_cover.jpg"
+
+# Create an Image object with the specified image path and dimensions (if needed)
+image = Image(image_path)
+
+elems.append(image)
+
+
+
 
 
 for location in location_list:
+    # Start with a new page
+    
+    elems.append(PageBreak())
 
     # Header, Lines, WantsNeeds Activities
+    
+
     
  #   logging.debug(f'System: {location}')
     
  #   logging.debug(f'main program for statement: {location} {type(location)}')
+ 
+ 
+ 
+ 
     
     system_details = get_system_object(c, location)
     trader_details = get_far_trader_object(c, location)
     header_style, travel_style, wantsneeds_style, detail_style, detail_header_style = get_styles()
+ 
+
+    system_images = []
+    
+    importance = system_details.ix
+    for i in ['{','}']: importance = importance.strip(i)
+    importance = int(importance)
+    if importance >= 4: 
+        system_image_path = "images/important.png"
+        system_image = Image(system_image_path)
+        system_image.drawWidth = 25
+        system_image.drawHeight = 25
+        system_images.append(system_image)
+    
+    bases = system_details.bases
+    if 'N' in bases or 'B' in bases:
+        system_image_path = "images/naval.png"
+        system_image = Image(system_image_path)
+        system_image.drawWidth = 25
+        system_image.drawHeight = 25
+        system_images.append(system_image)
+        
+    if 'S' in bases or 'B' in bases:
+        system_image_path = "images/scout.png"
+        system_image = Image(system_image_path)
+        system_image.drawWidth = 25
+        system_image.drawHeight = 25
+        system_images.append(system_image)
+
+    int_gwp =  trader_details.gwp.replace(",", "")       
+    if int(int_gwp) >= 1000000:
+        system_image_path = "images/wealthy.png"
+        system_image = Image(system_image_path)
+        system_image.drawWidth = 25
+        system_image.drawHeight = 25
+        system_images.append(system_image)
+        
+        
+    remarks_list = get_remarks_list()
+    for rem in remarks_list:
+        if rem[0] in list(system_details.remarks): 
+            system_image_path = 'images/' + rem[1] + '.png'
+            system_image = Image(system_image_path)
+            system_image.drawWidth = 25
+            system_image.drawHeight = 25
+            system_images.append(system_image)
+    
+    
+    if len(system_images) > 0:
+        logging.debug(f'System images to be added to {location}')
+        
+    
+    
+        
+        # Create a table with a single row and add the images to it
+        system_image_table = Table([system_images])
+        
+        system_image_table.setStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('BACKGROUND', (0,0), (-1,0), colors.gray),
+        ])
+           
+
+        elems.append(system_image_table)
+    
+    else:
+        logging.debug(f'No images for system {location}')
+ 
+    
+ 
+    
+ 
+    
+ 
+    
+ 
+    
+ 
+    
+ 
     
     text_1 = Paragraph(f"(<b>{location}) {system_details.name}</b>", header_style)
     text_2 = Paragraph(f"{system_details.remarks}   {system_details.ix}   {system_details.ex}  \
@@ -667,35 +813,38 @@ for location in location_list:
     alternate_background(summary_table, summary_table_data)
     
     culture_details = get_culture_stats_object(c, location)
- #   logging.debug(f"culture_details: {culture_details}")
+   # logging.debug(f"materialism: {culture_details.materialism_symbol}")
     
     
 
         
-    culture_header_line = Paragraph("Cultural Perceptions",detail_style)
+    culture_header_line = Paragraph("Cultural Perception",detail_style)
     culture_age_line = Paragraph(f"{culture_details.age.capitalize()}.  \
-                                 {culture_details.appearance.capitalize()} appearance.  \
-                                 {culture_details.tendency.capitalize()} tendency.  \
-                                 {culture_details.materialism.capitalize()} materialism.  \
-                                 {culture_details.honesty.capitalize()} honesty.",wantsneeds_style)
-                                 
-    culture_bravery_line = Paragraph(f"{culture_details.bravery.capitalize()} bravery.  \
-                                 {culture_details.social_conflict.capitalize()} social conflict.  \
-                                 {culture_details.work_ethic.capitalize()} work ethic.  \
-                                 {culture_details.consumerism.capitalize()} consumerism.",wantsneeds_style)                                
-                                 
-    culture_status_quo_line = Paragraph(f"{culture_details.spiritual_outlook.capitalize()} spiritual outlook. \
-                                 {culture_details.status_quo_outlook.capitalize()} status_quo_outlook.  \
-                                 {culture_details.custom.capitalize()}.  \
-                                 Interested in {culture_details.interest}.",wantsneeds_style)                              
-                                
+                                   {culture_details.appearance.capitalize()} appearance. \
+                                   {culture_details.tendency.capitalize()} tendency." ,wantsneeds_style)
+                           
+    culture_status_quo_line = Paragraph(f"<b>Spr: </b>{culture_details.spiritual_outlook.capitalize()}. \
+                                          <b>StQ: </b>{culture_details.status_quo_outlook.capitalize()}. \
+                                          <b>Cus: </b>{culture_details.custom.capitalize()}.  \
+                                          <b>Int: </b>{culture_details.interest.capitalize()}.",wantsneeds_style)            
+                                          
+    culture_symbol_line = Paragraph(f"Mat{culture_details.materialism_symbol}  \
+                                      Hon{culture_details.honesty_symbol} \
+                                      Brv{culture_details.bravery_symbol}  \
+                                      SC{culture_details.social_conflict_symbol}  \
+                                      WE{culture_details.work_ethic_symbol}  \
+                                      Con{culture_details.consumerism_symbol}",wantsneeds_style)
+                                      
+                       
     culture_skills_line = Paragraph(f"<b>Common skills:</b> {culture_details.common_skills}",wantsneeds_style)  
+    
+    logging.debug(f'Common skills for {location} are: {culture_details.common_skills}')
                                   
                              
     culture_lines = Culture_lines(culture_header_line,
                                     culture_age_line,
-                                    culture_bravery_line,
                                     culture_status_quo_line,
+                                    culture_symbol_line,
                                     culture_skills_line)
     
     elems += update_summary_elems(text_before_table, summary_table, culture_lines)
@@ -714,6 +863,7 @@ for location in location_list:
 
     for d in detail_list:
         
+
  #       logging.debug(f'entering details for {d}')
            
         detail_stats = get_detail_stats_object(c,d,uwp_dict)
@@ -737,7 +887,98 @@ for location in location_list:
             Paragraph(f"<b>{travel_hours_string}</b>", travel_style), 
         ]
         
+        images = []
         
+        if detail_stats.year != 'none':
+            image_path = "images/mask.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+            images.append(image)
+        
+        if detail_stats.body == 'Gas Giant':
+            image_path = "images/gas giant.PNG"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+            images.append(image)
+        elif detail_stats.body == 'Impact Moon' or detail_stats.body == 'Natural Moon':
+            image_path = "images/moon.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+        elif detail_stats.body == 'Ocean':
+            image_path = "images/ocean.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+        elif detail_stats.uwp[1] == '0':
+            image_path = "images/asteroid.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+            images.append(image)
+            
+            
+        if detail_stats.atmos_composition == 'Exotic':
+            image_path = "images/exotic.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+            images.append(image)
+        elif detail_stats.atmos_composition == 'Corrosive':
+            image_path = "images/corrosive.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+            images.append(image)
+        elif detail_stats.uwp[2] == '0':
+            image_path = "images/vacuum.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+            images.append(image)
+            
+        if  detail_stats.gravity > 1.50:
+            image_path = "images/heavy.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+            images.append(image)
+        elif  detail_stats.gravity < .50:
+            image_path = "images/light.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+            images.append(image)
+            
+        if detail_stats.temperature > 324:
+            image_path = "images/hot.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+            images.append(image)
+        elif detail_stats.temperature < 239:
+            image_path = "images/cold.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+            images.append(image)
+            
+            
+      
+            
+        
+#        Create a table with a single row and add the images to it
+        image_table = Table([images])
+        
+        image_table.setStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('BACKGROUND', (0,0), (-1,0), colors.gray),
+        ])
+            
+        
+
         
         detail_body = [
             [
@@ -831,15 +1072,54 @@ for location in location_list:
         
         # Apply the table style
         detail_table.setStyle(detail_table_style)              
-        detail_table = KeepTogether([detail_table])
+        detail_table = KeepTogether([image_table,detail_table])
         elems.append(detail_table)
         elems.append(Spacer(1, 30)) 
     
-    
-                   
-    
 
-pdf.build(elems)
+
+
+# Initialize an empty list to store index entries
+
+# Add PageBreak to start the index on a new page
+pdf_index = []
+
+pdf_index.append(PageBreak())
+
+index_header_style = ParagraphStyle(name='IndexHeader', fontSize=12, alignment=TA_CENTER)
+
+pdf_index.append(Paragraph('INDEX', index_header_style))
+pdf_index.append(Spacer(1,30))
+
+index_page_limit = 120
+index_name_total = len(index_name_list)
+index_name_pages = index_name_total // index_page_limit + 1
+
+logging.debug(f"Total index entries: {index_name_total}")
+logging.debug(f"Total expected pages: {index_name_pages}")
+
+
+for index_page in range(0,index_name_pages):
+    page_start = index_page_limit * index_page
+    page_end = page_start + index_page_limit
+    if page_end > index_name_total: page_end = index_name_total
+    index_sub_list = index_name_list[page_start:page_end]
+
+    # Create an empty list to store the rearranged entries
+    reordered_index = reorder_for_table(index_sub_list, 4)
+    
+    index_paragraphs = list(create_index_paragraphs(reordered_index))
+    index_table = create_index_table(index_paragraphs)  # Call the function
+    pdf_index.append(index_table)  # Add the table to the index list
+    pdf_index.append(PageBreak())
+
+
+# Append the index_table to the elems list
+elems += pdf_index
+
+# Assign the custom canvas with page numbers to the PDF document
+pdf = SimpleDocTemplate(output_file_name,page_size = letter)
+pdf.build(elems, onLaterPages=add_page_number)
 
 
 conn.commit()  
