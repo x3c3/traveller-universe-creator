@@ -38,7 +38,7 @@ import sqlite3
 
 import pandas as pd
 
-from traveller_functions import tohex, get_subsector_number_list, Culture_details, get_remarks_list
+from traveller_functions import tohex, get_subsector_number_list, Culture_details, get_remarks_list, hex_to_int
 
 
 def get_db():
@@ -748,22 +748,34 @@ for location in location_list:
         system_image.drawHeight = 25
         system_images.append(system_image)
         
+    if system_details.pbg[2] != '0':
+        system_image_path = "images/gas giant.PNG"
+        system_image = Image(system_image_path)
+        system_image.drawWidth = 25
+        system_image.drawHeight = 25
+        system_images.append(system_image)
+        
+
+        
+    
+        
         
     remarks_list = get_remarks_list()
+
+    logging.debug(f'Actual remarks: {system_details.remarks}')
     for rem in remarks_list:
-        if rem[0] in list(system_details.remarks): 
+        if system_details.remarks.count(rem[0]) >= 1: 
+            logging.debug(f'Remark found: {rem[0]}, {rem[1]}')
             system_image_path = 'images/' + rem[1] + '.png'
             system_image = Image(system_image_path)
             system_image.drawWidth = 25
             system_image.drawHeight = 25
             system_images.append(system_image)
+            logging.debug(f'Remark found in {location}: {system_image_path}')
     
     
     if len(system_images) > 0:
-        logging.debug(f'System images to be added to {location}')
-        
-    
-    
+
         
         # Create a table with a single row and add the images to it
         system_image_table = Table([system_images])
@@ -838,7 +850,7 @@ for location in location_list:
                        
     culture_skills_line = Paragraph(f"<b>Common skills:</b> {culture_details.common_skills}",wantsneeds_style)  
     
-    logging.debug(f'Common skills for {location} are: {culture_details.common_skills}')
+    #logging.debug(f'Common skills for {location} are: {culture_details.common_skills}')
                                   
                              
     culture_lines = Culture_lines(culture_header_line,
@@ -907,11 +919,13 @@ for location in location_list:
             image = Image(image_path)
             image.drawWidth = 25
             image.drawHeight = 25
+            images.append(image)
         elif detail_stats.body == 'Ocean':
             image_path = "images/ocean.png"
             image = Image(image_path)
             image.drawWidth = 25
             image.drawHeight = 25
+            images.append(image)
         elif detail_stats.uwp[1] == '0':
             image_path = "images/asteroid.png"
             image = Image(image_path)
