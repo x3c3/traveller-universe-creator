@@ -7,7 +7,8 @@ v 1.1.0  2024-04-27  API connections to traveller maps
 v 1.1.0a  2024-04-28  Fixed error when clicking Full System without mainworld selected
 v 1.1.0b  2024-05-04  1. Fixed another error when clicking Full System without mainworld selected
                       2. Added confirmation windows for traveller map buttons  
-v 1.1.0c  2024-05-05  Added ring information for each orbital body                      
+v 1.1.0c  2024-05-05  Added ring information for each orbital body          
+v 1.1.0d  2024-05-11  Moved remarks list to traveller_functions          
 """
 
 import logging
@@ -659,10 +660,14 @@ list_images = [['mask','Completely Stellar Masked'],
                ['heavy','High Gravity World'],
                ['hot','Unhinhabitable Heat'],
                ['cold','Uninhabitable Cold'],
-               ['hipop','High Population World'],
+               ['hipop','High Population System'],
+               ['lopop','Lo Population System'],
+               ['barren','No Population in System'],
                ['wealthy','Wealthy System'],
                ['industrial','Industrial Economy'],
+               ['non_industrial','Non-industrial Economy'],
                ['agricultural','Agricultural Economy'],
+               ['non_agricultural','Non-agricultural Economy'],
                ['important','Important System'],
                ['naval','Naval Base Present'],
                ['scout','Scout Base Present'],

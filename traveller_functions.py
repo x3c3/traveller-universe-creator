@@ -13,6 +13,10 @@ def get_remarks_list():
     remarks_list = [['In', 'industrial'],
                     ['Ag', 'agricultural'],
                     ['Hi', 'hipop'],
+                    ['Lo', 'lopop'],
+                    ['Ba', 'barren'],
+                    ['Na', 'non_agricultural'],
+                    ['Ni', 'non_industrial'],
                     ['Px', 'prison']]
     return remarks_list
 
