@@ -12,6 +12,7 @@ def add_traveller_stats(seed_number,db_name,settlement_mod):
 
 #   COMPLETE:  Need to add a routine to get belts and GG totals
 #   COMPLETE:  Stellar information added from all three stellar tables
+#   2024-05-11 COMPLETE:  updated pbg to include secondary and tertiary stars
 
 
     
@@ -49,7 +50,10 @@ def add_traveller_stats(seed_number,db_name,settlement_mod):
     def capture_secondary_stats():
         sql3_select_c_stars = """  SELECT   location, 
                                             luminosity_class, 
-                                            spectral_type
+                                            spectral_type,
+                                            belts,
+                                            gg,
+                                            orbits
                                     FROM    stellar_bodies WHERE companion_class = '1'  """
                                     
         c.execute(sql3_select_c_stars)
@@ -57,14 +61,20 @@ def add_traveller_stats(seed_number,db_name,settlement_mod):
         c_stars_dict = {}
         for row in allrows:
             c_stars_dict[row[0]] = {    'c_lumc'        :row[1],
-                                        'c_spec'        :row[2]}
+                                        'c_spec'        :row[2],
+                                        'no_belts'      :row[3],
+                                        'no_gg'         :row[4],
+                                        'worlds'        :row[5]}
     
         return c_stars_dict
         
     def capture_tertiary_stats():
         sql3_select_t_stars = """  SELECT   location, 
                                             luminosity_class, 
-                                            spectral_type
+                                            spectral_type,
+                                            belts,
+                                            gg,
+                                            orbits
                                     FROM    stellar_bodies WHERE companion_class = '2' OR companion_class = '1.1' """
                                     
         c.execute(sql3_select_t_stars)
@@ -72,7 +82,10 @@ def add_traveller_stats(seed_number,db_name,settlement_mod):
         t_stars_dict = {}
         for row in allrows:
             t_stars_dict[row[0]] = {    't_lumc'        :row[1],
-                                        't_spec'        :row[2]}
+                                        't_spec'        :row[2],                                       
+                                        'no_belts'      :row[3],
+                                        'no_gg'         :row[4],
+                                        'worlds'        :row[5]}
     
         return t_stars_dict    
     
@@ -623,9 +636,27 @@ def add_traveller_stats(seed_number,db_name,settlement_mod):
         population = get_population(row[0],settlement_mod)
         sector_population += 10**population
         pop_mod = get_pop_mod(row[0],population)
+        
+                
         belts = get_belts(row[1],p_stars_dict)
         gg = get_gg(row[1],p_stars_dict)
         w = get_worlds(row[1],p_stars_dict)
+        
+        if row[1] in c_stars_dict:
+            belts += get_belts(row[1],c_stars_dict)
+            gg += get_gg(row[1],c_stars_dict)
+            w += get_worlds(row[1],c_stars_dict)
+            
+            if  row[1] in t_stars_dict:
+                belts += get_belts(row[1],t_stars_dict)
+                gg += get_gg(row[1],t_stars_dict)
+                w += get_worlds(row[1],t_stars_dict)
+                
+                
+            
+        
+        
+        
         pbg = str(str(pop_mod) + str(belts) + str(gg))
         starport = get_starport(row[0], population)
         bases = get_bases(row[0],starport)
