@@ -38,12 +38,13 @@ import sqlite3
 
 import pandas as pd
 
-from traveller_functions import tohex, get_subsector_number_list, Culture_details, get_remarks_list, hex_to_int
+from traveller_functions import tohex, get_subsector_number_list, Culture_details, get_remarks_list
 
 
 def get_db():
     # Select the db file to print
-    return 'C:/Users/sean/Dropbox/RPG/Traveller/MTU/solo-6/solo-6.db'
+    #return 'C:/Users/sean/Dropbox/RPG/Traveller/MTU/solo-6/solo-6.db'
+    return 'sector_db/example-66.db'
 
 def get_location(c):
     # Produce a list of locations to be included in the export
@@ -484,8 +485,11 @@ def reorder_for_table(data, num_columns):
 # Generate paragraphs from index entries
 def create_index_paragraphs(index_name_list):
     for index_entry in index_name_list:
-        cell_content = f"{index_entry[0]}: {index_entry[1]}"
-        yield Paragraph(cell_content, ParagraphStyle(name='IndexEntry', fontSize=7))
+        if index_entry[0] != '*':
+            cell_content = f"{index_entry[0]}: {index_entry[1]}"
+        else:
+            cell_content = "  "
+        yield Paragraph(cell_content, ParagraphStyle(name='IndexEntry', fontSize=7))    
 
 
 
@@ -920,18 +924,30 @@ for location in location_list:
             image.drawWidth = 25
             image.drawHeight = 25
             images.append(image)
-        elif detail_stats.body == 'Ocean':
-            image_path = "images/ocean.png"
-            image = Image(image_path)
-            image.drawWidth = 25
-            image.drawHeight = 25
-            images.append(image)
+
         elif detail_stats.uwp[1] == '0':
             image_path = "images/asteroid.png"
             image = Image(image_path)
             image.drawWidth = 25
             image.drawHeight = 25
             images.append(image)
+
+
+        if detail_stats.wtype[0] == 'Ocean*':
+            logging.debug(f'Found an Ocean world {location}: {detail_stats.name} ')
+            image_path = "images/ocean.png"
+            image = Image(image_path)
+            image.drawWidth = 25
+            image.drawHeight = 25
+            images.append(image)
+        else:
+            if location == '0922':
+                logging.debug(f'No Ocean world {detail_stats.name} {detail_stats.wtype}')
+
+                
+
+
+
             
             
         if detail_stats.atmos_composition == 'Exotic':
@@ -978,6 +994,9 @@ for location in location_list:
             image.drawWidth = 25
             image.drawHeight = 25
             images.append(image)
+            
+
+            
             
             
       
@@ -1107,7 +1126,14 @@ pdf_index.append(Spacer(1,30))
 
 index_page_limit = 120
 index_name_total = len(index_name_list)
-index_name_pages = index_name_total // index_page_limit + 1
+
+padding_entries = index_page_limit - (index_name_total % index_page_limit)
+if padding_entries > 0:
+    for each_entry in range(0, padding_entries): index_name_list.append(('*','*'))
+
+index_name_total = len(index_name_list)
+
+index_name_pages = index_name_total // index_page_limit 
 
 logging.debug(f"Total index entries: {index_name_total}")
 logging.debug(f"Total expected pages: {index_name_pages}")
@@ -1119,11 +1145,11 @@ for index_page in range(0,index_name_pages):
     if page_end > index_name_total: page_end = index_name_total
     index_sub_list = index_name_list[page_start:page_end]
 
-    # Create an empty list to store the rearranged entries
     reordered_index = reorder_for_table(index_sub_list, 4)
     
     index_paragraphs = list(create_index_paragraphs(reordered_index))
     index_table = create_index_table(index_paragraphs)  # Call the function
+   
     pdf_index.append(index_table)  # Add the table to the index list
     pdf_index.append(PageBreak())
 
