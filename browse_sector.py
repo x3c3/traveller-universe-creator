@@ -32,6 +32,7 @@ from matplotlib.figure import Figure
 from matplotlib import style
 
 from traveller_functions import tohex, get_description, get_remarks_list
+from export_sector import export_ss_to_pdf
 
 try:    
     import pyi_splash
@@ -434,6 +435,9 @@ def make_win1():
               sg.Button('World Map', key=('-WORLDMAP-')),
               sg.Button('Sector Map', key=('-TRAVELLERMAP-')),
               sg.VSeparator(),
+              sg.Button('PDF', key=('-EXPORT-')),
+              sg.VSeparator(),
+              sg.VSeparator(),
               sg.Button('Exit'),
         ],
         [sg.HSeparator(), 
@@ -594,6 +598,76 @@ def make_win4(needs_list,wants_list,location):
         
             
     return sg.Window('Trade Goods, Frequently Needed and Surplus System Wide',goods_layout,size=(350,250),finalize=True) 
+
+
+
+
+def make_win5(db):
+    
+    logging.debug('Entered make_win5()')   
+    
+    
+    try:
+        
+        export_ss_layout =  [
+
+        [sg.Text("Subsector Letter")],
+        [sg.Radio('A', "RADIO1", key = '-A-', default=True),
+         sg.Radio('B', "RADIO1", key = '-B-'),
+         sg.Radio('C', "RADIO1", key = '-C-'),
+         sg.Radio('D', "RADIO1", key = '-D-')],
+        [sg.Button('Generate'), sg.Button('Cancel')]
+
+        
+        ]          
+        
+        logging.debug('Win 5 layout complete')
+        
+        # Event Loop to process "events" and get the "values" of the inputs
+        window_5 = sg.Window('Choose a Subsector for Export',export_ss_layout,size=(550,500),finalize=True)  
+        
+        while True:
+            
+            export_event, export_values = window_5.read()
+            if export_event == sg.WIN_CLOSED or export_event == 'Cancel': # if user closes window or clicks cancel
+                logging.debug('Window Closed')
+                break
+                
+            else:
+                print(f'Printing:  {export_values}')
+                if export_values['-A-']  == True:
+                    ss='A'
+                elif export_values['-B-'] == True:
+                    ss='B'
+                elif export_values['-C-'] == True:
+                    ss='C'
+                elif export_values['-D-'] == True:
+                    ss='D'
+                else: ss='A'
+                
+                logging.debug(f'SS value =  {ss}')
+                    
+                export_ss_to_pdf(db,ss)
+                break
+                
+                
+                    
+
+        window_5.close()
+  
+
+
+
+
+
+
+    except:
+        sg.Popup('Failed export layout')
+        
+    
+
+    return 
+
 
 
 def confirm_window(message_text):
@@ -1209,8 +1283,22 @@ while True:
     
             except:
               logging.debug('Failed Traveller Map')
+                  
         else:
             logging.debug('cancelled sector map')
+            
+    elif event == '-EXPORT-':
+        try:  
+            logging.debug('Calling win 5')
+            window5 = make_win5(db_name)      
+
+            
+            
+ 
+        except Exception as e:
+            # Access the error message using e.args or str(e)
+            logging.debug(f"Error: {e}")  # Example usage
+            logging.debug('Export failed')
 
 conn.commit()  
 c.close()
