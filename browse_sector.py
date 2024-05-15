@@ -435,7 +435,7 @@ def make_win1():
               sg.Button('World Map', key=('-WORLDMAP-')),
               sg.Button('Sector Map', key=('-TRAVELLERMAP-')),
               sg.VSeparator(),
-              sg.Button('PDF', key=('-EXPORT-')),
+              sg.Button('Sector PDF', key=('-EXPORT-')),
               sg.VSeparator(),
               sg.VSeparator(),
               sg.Button('Exit'),
@@ -616,6 +616,14 @@ def make_win5(db):
          sg.Radio('B', "RADIO1", key = '-B-'),
          sg.Radio('C', "RADIO1", key = '-C-'),
          sg.Radio('D', "RADIO1", key = '-D-')],
+        [sg.Radio('E', "RADIO1", key = '-E-', default=True),
+         sg.Radio('F', "RADIO1", key = '-F-'),
+         sg.Radio('G', "RADIO1", key = '-G-'),
+         sg.Radio('H', "RADIO1", key = '-H-')],
+        [sg.Radio('I  ', "RADIO1", key = '-I-', default=True),
+         sg.Radio('J', "RADIO1", key = '-J-'),
+         sg.Radio('K', "RADIO1", key = '-K-'),
+         sg.Radio('L', "RADIO1", key = '-L-')],
         [sg.Button('Generate'), sg.Button('Cancel')]
 
         
@@ -643,6 +651,23 @@ def make_win5(db):
                     ss='C'
                 elif export_values['-D-'] == True:
                     ss='D'
+                elif export_values['-E-'] == True:
+                    ss='E'
+                elif export_values['-F-'] == True:
+                    ss='F'
+                elif export_values['-G-'] == True:
+                    ss='G'
+                elif export_values['-H-'] == True:
+                    ss='H'
+                elif export_values['-I-'] == True:
+                    ss='I'
+                elif export_values['-J-'] == True:
+                    ss='J'
+                elif export_values['-K-'] == True:
+                    ss='K'
+                elif export_values['-L-'] == True:
+                    ss='L'
+                  
                 else: ss='A'
                 
                 logging.debug(f'SS value =  {ss}')

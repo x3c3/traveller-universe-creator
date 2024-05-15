@@ -13,6 +13,9 @@ def export_ss_to_pdf(db,ss):
     """
     
     import logging
+    import sqlite3
+    import pandas as pd
+    import os
     
     # Set the logging level to DEBUG
     logging.basicConfig(level=logging.DEBUG)
@@ -35,9 +38,7 @@ def export_ss_to_pdf(db,ss):
     
     from reportlab.lib.enums import TA_CENTER
     
-    import sqlite3
-    
-    import pandas as pd
+
     
     from traveller_functions import tohex, get_subsector_number_list, Culture_details, get_remarks_list
     
@@ -673,6 +674,7 @@ def export_ss_to_pdf(db,ss):
     
     # Set parameters and file names
     db_name = get_db(db)
+    sector = os.path.basename(db_name)[0:-3]
     subsector = get_subsector(ss)
     output_file_name = get_output_file_name(db_name,subsector)
     elems = []
@@ -685,13 +687,17 @@ def export_ss_to_pdf(db,ss):
     # Gather Data
     location_list = get_location(c, subsector)
     index_name_list = get_index_names(c, location_list)
+    header_style, travel_style, wantsneeds_style, detail_style, detail_header_style = get_styles()
     
     
-    
+    elems.append(Paragraph(f"<b>{sector} Sector</b>", header_style))
+    elems.append(Paragraph(f"Subsector {subsector}", header_style))
     
     
     # Path to the image file
-    image_path = "atomic_cover.jpg"
+    image_path = 'covers/' + subsector + ".jpg"
+   
+    
     
     # Create an Image object with the specified image path and dimensions (if needed)
     image = Image(image_path)
@@ -704,6 +710,7 @@ def export_ss_to_pdf(db,ss):
     
     for location in location_list:
         # Start with a new page
+
         
         elems.append(PageBreak())
     
@@ -721,7 +728,7 @@ def export_ss_to_pdf(db,ss):
         
         system_details = get_system_object(c, location)
         trader_details = get_far_trader_object(c, location)
-        header_style, travel_style, wantsneeds_style, detail_style, detail_header_style = get_styles()
+
      
     
         system_images = []
