@@ -31,7 +31,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib import style
 
-from traveller_functions import tohex, get_description, get_remarks_list
+from traveller_functions import tohex, get_description, get_remarks_list, save_downloaded_image
 from export_sector import export_ss_to_pdf
 
 try:    
@@ -97,10 +97,7 @@ def clear_images():
 def add_image(image_var):
         window[image_var].unhide_row()
         
-def save_downloaded_image(response, png_name):
-  """Saves the downloaded image content to a file."""
-  with open(png_name, 'wb') as f:
-    f.write(response.content)        
+     
         
         
 def select_images(loc_info,system_info,detail_info,economic_info):
@@ -1259,8 +1256,8 @@ while True:
             logging.debug('confirmed sector map')
             try:
               logging.debug('Traveller Sector Map ' + db_name)
-              tab = db_name + '_tab.txt'  # Only data file needed
-              routes = db_name + '_routes.txt'  # Only data file needed
+              tab = db_name + '_tab.txt'  
+              routes = db_name + '_routes.txt'  
             
             # API endpoint
               url = "https://travellermap.com/api/poster?style=print"
@@ -1278,7 +1275,7 @@ while True:
                 # Check if response is binary data (optional)
                 if 'Content-Type' in response.headers and response.headers['Content-Type'].startswith('image/'):
                     # Handle binary response (e.g., save image to file)
-                    png_name = db_name + '.sector_map.png'
+                    png_name = db_name + '_sector_map.png'
                     save_downloaded_image(response, png_name)
                     logging.debug("File Saved")
                     sg.Popup('Map file saved to sector directory')

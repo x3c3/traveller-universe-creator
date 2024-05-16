@@ -378,4 +378,9 @@ class Culture_details:
         )
                 
         return updated_culture_object
-        
+
+
+def save_downloaded_image(response, png_name):
+  """Saves the downloaded image content to a file."""
+  with open(png_name, 'wb') as f:
+    f.write(response.content)           

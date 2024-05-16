@@ -13,6 +13,7 @@ def export_ss_to_pdf(db,ss):
     """
     
     import logging
+    import requests
     import sqlite3
     import pandas as pd
     import os
@@ -37,10 +38,13 @@ def export_ss_to_pdf(db,ss):
     from reportlab.lib.units import inch
     
     from reportlab.lib.enums import TA_CENTER
-    
+    from reportlab.pdfgen import canvas
 
     
-    from traveller_functions import tohex, get_subsector_number_list, Culture_details, get_remarks_list
+    from traveller_functions import tohex, get_subsector_number_list
+    from traveller_functions import Culture_details, get_remarks_list, save_downloaded_image
+    
+    from PyPDF2 import PdfMerger
     
     
     def get_db(db):
@@ -674,9 +678,10 @@ def export_ss_to_pdf(db,ss):
     
     # Set parameters and file names
     db_name = get_db(db)
-    sector = os.path.basename(db_name)[0:-3]
+    sector = os.path.basename(db_name)[0:-3].capitalize()
     subsector = get_subsector(ss)
     output_file_name = get_output_file_name(db_name,subsector)
+    image_path = 'covers/' + subsector + ".jpg"
     elems = []
     
     
@@ -690,29 +695,136 @@ def export_ss_to_pdf(db,ss):
     header_style, travel_style, wantsneeds_style, detail_style, detail_header_style = get_styles()
     
     
-    elems.append(Paragraph(f"<b>{sector} Sector</b>", header_style))
-    elems.append(Paragraph(f"Subsector {subsector}", header_style))
-    
-    
-    # Path to the image file
-    image_path = 'covers/' + subsector + ".jpg"
-   
-    
-    
-    # Create an Image object with the specified image path and dimensions (if needed)
-    image = Image(image_path)
-    
-    elems.append(image)
-    
-    
-    
-    
-    
-    for location in location_list:
-        # Start with a new page
 
+    
+    # Create a canvas
+    cover = canvas.Canvas("sector_db/cover.pdf", pagesize=letter)
+    
+    # Define page size
+    page_width, page_height = letter
+    
+    # Define image size
+    image_width, image_height = 439, 685
+    
+    # Calculate x coordinate to center the image horizontally
+    x = (page_width - image_width) / 2
+    
+    # Calculate y coordinate to center the image vertically
+    y = (page_height - image_height) / 2
+    
+    # Draw the image
+    cover.drawImage(image_path, x, y, width=image_width, height=image_height)
+ 
+    
+    # Set the fill color to white
+    cover.setFillColor(colors.white)
+ 
+    # Add text on top of the image
+ 
+    cover.setFont("Helvetica-Bold", 20)    
+    text_sector = f"{sector}"
+ 
+     
+    cover.setFont("Helvetica", 18) 
+    text_subsector = f"Subsector {subsector}"
+
+    cover.drawString(150, 675, text_sector)  # Adjust x, y coordinates as needed
+    cover.drawString(150, 655, text_subsector)  # Adjust x, y coordinates as needed
+ 
+    # Add the canvas object to the list of elements
+    
+    cover.save()
+    
+
+
+    
+
+    
+    
+    try:
+      logging.debug('Traveller Sector Map ' + db_name)
+      tab = db_name + '_tab.txt'  
+      routes = db_name + '_routes.txt'  
+    
+    # API endpoint
+      url = "https://travellermap.com/api/poster?style=print"
+      
+      # Files to upload
+      files = {
+          'file': open(tab, 'rb'),
+          'metadata': open(routes, 'rb')
+      }
+      
+      try:
+        response = requests.post(url, files=files)
+        response.raise_for_status()  # Raise exception for non-200 status codes
         
-        elems.append(PageBreak())
+        # Check if response is binary data (optional)
+        if 'Content-Type' in response.headers and response.headers['Content-Type'].startswith('image/'):
+            # Handle binary response (e.g., save image to file)
+            png_name = db_name + '_sector_map.png'
+            save_downloaded_image(response, png_name)
+            logging.debug("Traveller Map File Saved")   
+        else:
+            logging.debug('Traveller Map response received but not expected')
+            
+      except:
+          logging.debug('Response not received')
+          
+    except:
+        logging.debug('Unexpected error in Traveller Map API')
+    
+    
+    
+
+    # map_image = Image(png_name)
+    # map_image.drawWidth = 439
+    # map_image.drawHeight = 685
+    # elems.append(map_image)
+    
+    
+    # Create a canvas
+    sec_map = canvas.Canvas("sector_db/sec_map.pdf", pagesize=letter)
+    
+    # Define page size
+    page_width, page_height = letter
+    
+    # Define image size
+    image_width, image_height = 470, 679
+    
+    # Calculate x coordinate to center the image horizontally
+    x = (page_width - image_width) / 2
+    
+    # Calculate y coordinate to center the image vertically
+    y = (page_height - image_height) / 2
+    
+    # Draw the image
+    sec_map.drawImage(png_name, x, y, width=image_width, height=image_height)
+ 
+    
+    # Set the fill color to white
+    sec_map.setFillColor(colors.black)
+ 
+    # Add text on top of the image
+ 
+    sec_map.setFont("Helvetica-Bold", 20)    
+    text_sector = f"{sector}"
+ 
+
+    sec_map.drawString(90, 750, text_sector)  # Adjust x, y coordinates as needed
+
+ 
+    # Add the canvas object to the list of elements
+    
+    sec_map.save()
+    
+    
+    
+    
+    
+    first_run = True
+    for location in location_list:
+
     
         # Header, Lines, WantsNeeds Activities
         
@@ -722,8 +834,10 @@ def export_ss_to_pdf(db,ss):
         
      #   logging.debug(f'main program for statement: {location} {type(location)}')
      
-     
-     
+        if not first_run:
+            elems.append(PageBreak())       
+        else:
+            first_run = False
      
         
         system_details = get_system_object(c, location)
@@ -1174,6 +1288,14 @@ def export_ss_to_pdf(db,ss):
     # Assign the custom canvas with page numbers to the PDF document
     pdf = SimpleDocTemplate(output_file_name,page_size = letter)
     pdf.build(elems, onLaterPages=add_page_number)
+    
+    # Merge the cover PDF with the main PDF
+    merger = PdfMerger()
+    merger.append("sector_db/cover.pdf")  # Add the cover PDF
+    merger.append("sector_db/sec_map.pdf")  # Add the cover PDF
+    merger.append(output_file_name)
+    merger.write(output_file_name)  # Save the merged PDF
+    merger.close()
     
     
     conn.commit()  
