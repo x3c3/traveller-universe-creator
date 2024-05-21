@@ -1,6 +1,19 @@
 traveller-universe-creator 
 aka Bartleby's Sector Builder
 
+v 1.1x - 2024-05-21 - API Mapping and PDF Export features
+
+Upgrade is in progress.
+
+If you wish to use the last stable version then use the EXE install.
+
+The other python scripts are changing almost daily.
+
+NOTE - new imports required for using the Sector Export feature:
+ - PyPDF2 3.0.1
+ - reportlab 4.2.0
+
+
 v 1.0 - 2022-11-12
 
 The goal is to generate an entire Traveller sector of stars, planets, moons using "realistic" scientific models
