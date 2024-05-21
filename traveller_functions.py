@@ -6,6 +6,8 @@ Created on Thu Dec  2 16:35:43 2021
 """
 
 import random
+import logging
+import requests
 
 
 # used for images on browser and export
@@ -248,6 +250,49 @@ def get_subsector_number_list(subsector):
     return subsector_number_list
 
 
+#### saves an image from an api call
+def save_downloaded_image(response, png_name):
+  """Saves the downloaded image content to a file."""
+  with open(png_name, 'wb') as f:
+    f.write(response.content)       
+    
+
+
+#### API call for image download using html POST method
+#### Makes use of save_down_load_image above
+#### Currently only used for travellermap.com
+
+def download_image_via_api(api_image_parameters):
+    
+      url = api_image_parameters.url
+      tab = api_image_parameters.files['file']
+      routes = api_image_parameters.files['metadata']
+      png_name = api_image_parameters.image_name
+      
+      # File parms to upload
+      files = {
+      'file': open(tab, 'rb'),
+      'metadata': open(routes, 'rb')
+      }
+      
+      try:
+        response = requests.post(url, files=files)
+        response.raise_for_status()  # Raise exception for non-200 status codes
+    
+        # Check if response is binary data (optional)
+        if 'Content-Type' in response.headers and response.headers['Content-Type'].startswith('image/'):
+            # Handle binary response (e.g., save image to file)
+            save_downloaded_image(response, png_name)
+            logging.debug("File Saved")
+        else:
+            logging.debug('API response received but unexpected format')
+
+      except:
+          logging.debug('Failed api')
+    
+        
+
+#### culture details object used for browser and export
 class Culture_details:
     def __init__(self,
                  age, 
@@ -380,7 +425,16 @@ class Culture_details:
         return updated_culture_object
 
 
-def save_downloaded_image(response, png_name):
-  """Saves the downloaded image content to a file."""
-  with open(png_name, 'wb') as f:
-    f.write(response.content)           
+# An object used to hold and pass decisions for API image downloads
+# Currently only traveller_map API is used
+# Used in export_sector and browse_sector
+class Api_image_parameters:
+    def __init__(self,
+                 url,
+                 files,
+                 image_name):
+        self.url = url                        # Url of API
+        self.files = files                    # File parms to send to API
+        self.image_name = image_name          # File name of the downloaded image
+
+    

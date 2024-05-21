@@ -2,8 +2,8 @@
 """
 Created on Sun Oct 31 23:19:42 2021
 
-v 1.0.1a 2024-04-27  Fixed Full System bug when button pressed twice in a row
-v 1.1.0  2024-04-27  API connections to traveller maps
+v 1.0.1a  2024-04-27  Fixed Full System bug when button pressed twice in a row
+v 1.1.0   2024-04-27  API connections to traveller maps
 v 1.1.0a  2024-04-28  Fixed error when clicking Full System without mainworld selected
 v 1.1.0b  2024-05-04  1. Fixed another error when clicking Full System without mainworld selected
                       2. Added confirmation windows for traveller map buttons  
@@ -13,7 +13,6 @@ v 1.1.0d  2024-05-11  Moved remarks list to traveller_functions
 
 import logging
 import warnings
-import requests
 import platform
 
 import PySimpleGUI as sg
@@ -31,7 +30,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib import style
 
-from traveller_functions import tohex, get_description, get_remarks_list, save_downloaded_image
+from traveller_functions import tohex, get_description, get_remarks_list
+from traveller_functions import Api_image_parameters, download_image_via_api
+
 from export_sector import export_ss_to_pdf
 
 try:    
@@ -98,7 +99,6 @@ def add_image(image_var):
         window[image_var].unhide_row()
         
      
-        
         
 def select_images(loc_info,system_info,detail_info,economic_info):
     if list(detail_info['gravity'])[0] > 1.50:
@@ -710,6 +710,15 @@ def confirm_window(message_text):
     return event == "Continue"
     
 
+# Open an image using the system's default application (Windows only)
+def open_image(pgn_name):
+
+    if platform.system() == "Windows":  # Windows specific
+        logging.debug("Platform is windows - opening file")
+        os.startfile(png_name)
+    else:  # Attempt to use a generic approach for other OSes (might require additional libraries)
+        logging.debug("Platform is not windows - file is saved")
+
 # ------------------------------- MATPLOTLIB CODE HERE -------------------------------
 
 f= Figure(figsize=(4,5),dpi=100)
@@ -1253,58 +1262,28 @@ while True:
     
     elif event == '-TRAVELLERMAP-':
         if confirm_window('Would you like me to download the sector map image from travellermap.com?'):
-            logging.debug('confirmed sector map')
-            try:
-              logging.debug('Traveller Sector Map ' + db_name)
-              tab = db_name + '_tab.txt'  
-              routes = db_name + '_routes.txt'  
             
-            # API endpoint
-              url = "https://travellermap.com/api/poster?style=print"
+            logging.debug('confirmed sector map')
+
+            tab = db_name + '_tab.txt'  
+            routes = db_name + '_routes.txt'  
+            url = "https://travellermap.com/api/poster?style=print"
+            files = {
+            'file': tab,
+            'metadata': routes
+            }
+            png_name = db_name + '_sector_map.png'
               
-              # Files to upload
-              files = {
-                  'file': open(tab, 'rb'),
-                  'metadata': open(routes, 'rb')
-              }
-              
-              try:
-                response = requests.post(url, files=files)
-                response.raise_for_status()  # Raise exception for non-200 status codes
-                
-                # Check if response is binary data (optional)
-                if 'Content-Type' in response.headers and response.headers['Content-Type'].startswith('image/'):
-                    # Handle binary response (e.g., save image to file)
-                    png_name = db_name + '_sector_map.png'
-                    save_downloaded_image(response, png_name)
-                    logging.debug("File Saved")
-                    sg.Popup('Map file saved to sector directory')
-                    
-                    
-                    # Open the downloaded image using the system's default application
-    
-                    if platform.system() == "Windows":  # Windows specific
-                        logging.debug("Platform is windows - opening file")
-                        os.startfile(png_name)
-                    else:  # Attempt to use a generic approach for other OSes (might require additional libraries)
-                        logging.debug("Platform is not windows - file is saved")
-     
-                    
-                    
-                    
-                    
-                else:
-                    # Handle non-binary response (e.g., JSON)
-                    data = response.json()
-                    logging.debug(data)
-                        
-              except requests.exceptions.RequestException as e:
-                  logging.debug(f"Error: {e}")
-    
-    
-    
-            except:
-              logging.debug('Failed Traveller Map')
+            
+            api_parm_object = Api_image_parameters(url, files, png_name)
+
+
+            download_image_via_api(api_parm_object)
+            sg.Popup('Map file saved to sector directory')
+               
+            open_image(png_name)    
+
+ 
                   
         else:
             logging.debug('cancelled sector map')
