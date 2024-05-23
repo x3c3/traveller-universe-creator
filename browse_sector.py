@@ -455,7 +455,7 @@ def make_win1():
          ],
         
     ]
-    return sg.Window("""Bartleby's Sector Builder v 1.1.0c""", layout,size=(1300,700),finalize=True)
+    return sg.Window("""Bartleby's Sector Builder v 1.1.0d""", layout,size=(1300,700),finalize=True)
 
 
 
@@ -621,6 +621,10 @@ def make_win5(db):
          sg.Radio('J', "RADIO1", key = '-J-'),
          sg.Radio('K', "RADIO1", key = '-K-'),
          sg.Radio('L', "RADIO1", key = '-L-')],
+        [sg.Radio('M', "RADIO1", key = '-M-', default=True),
+         sg.Radio('N', "RADIO1", key = '-N-'),
+         sg.Radio('O', "RADIO1", key = '-O-'),
+         sg.Radio('P', "RADIO1", key = '-P-')],
         [sg.Button('Generate'), sg.Button('Cancel')]
 
         
@@ -639,7 +643,7 @@ def make_win5(db):
                 break
                 
             else:
-                print(f'Printing:  {export_values}')
+                logging.debug(f'Printing:  {export_values}')
                 if export_values['-A-']  == True:
                     ss='A'
                 elif export_values['-B-'] == True:
@@ -664,6 +668,14 @@ def make_win5(db):
                     ss='K'
                 elif export_values['-L-'] == True:
                     ss='L'
+                elif export_values['-M-'] == True:
+                    ss='M'
+                elif export_values['-N-'] == True:
+                    ss='N'    
+                elif export_values['-O-'] == True:
+                    ss='O'    
+                elif export_values['-P-'] == True:
+                    ss='P'    
                   
                 else: ss='A'
                 
@@ -817,7 +829,16 @@ FROM system_stats
 '''
 
 
-df_system_main = pd.read_sql_query(system_main_query,conn)
+try:
+    df_system_main = pd.read_sql_query(system_main_query,conn)
+except Exception as e:
+    logging.debug(f'Exception occured: {e}')
+
+
+
+
+
+
 s_labels = []
 s_labels = list(df_system_main.columns)
 s_labels.remove('location')
@@ -854,7 +875,17 @@ ON t.location_orb = e.location_orbit
 WHERE t.main_world = 1
 '''
 
-df_details = pd.read_sql_query(new_detail_sql_query,conn)
+
+try:
+    df_details = pd.read_sql_query(new_detail_sql_query,conn)
+    
+except Exception as e:
+    logging.debug(f'DB Exception occured: {e}')
+
+
+
+
+
 d_labels = []
 d_labels = list(df_details.columns)
 d_labels.remove('location')
@@ -887,7 +918,11 @@ d_tooltips = ['Planet, Impact Moon, Natural Moon',
 
 
 economic_sql_query = '''SELECT * FROM far_trader'''
-df_economic = pd.read_sql_query(economic_sql_query,conn)
+try:
+    df_economic = pd.read_sql_query(economic_sql_query,conn)
+except Exception as e:
+    logging.debug(f'DB Exception occured: {e}')    
+    
 e_labels = []
 e_labels = list(df_economic.columns)
 e_labels.remove('location')
@@ -938,13 +973,22 @@ while True:
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
         df = pd.read_sql_query(new_main_query,conn)
-        df_system = pd.read_sql_query(system_main_query,conn)
-        df_stellar = pd.read_sql_query('SELECT * FROM stellar_bodies',conn)
-        df_culture = pd.read_sql_query('SELECT * FROM perceived_culture',conn)
+        
+        
+        try:
+            
+            df_system = pd.read_sql_query(system_main_query,conn)
+            df_stellar = pd.read_sql_query('SELECT * FROM stellar_bodies',conn)
+            df_culture = pd.read_sql_query('SELECT * FROM perceived_culture',conn)
+            df_details = pd.read_sql_query(new_detail_sql_query,conn)
         
 
+
+        except Exception as e:
+            logging.debug(f'DB Exception occured: {e}')
+
         
-        df_details = pd.read_sql_query(new_detail_sql_query,conn)
+        
         
         
 
@@ -953,9 +997,12 @@ while True:
         df_details['mainworld_calc'] = round(df_details['mainworld_calc'],2)            
 
 
-        
-        df_economic = pd.read_sql_query(economic_sql_query,conn)
-        df_economic['exchange'] = round(df_economic['exchange'],2)  # otherwise crazy decimals added
+        try:
+            df_economic = pd.read_sql_query(economic_sql_query,conn)
+            df_economic['exchange'] = round(df_economic['exchange'],2)  # otherwise crazy decimals added
+        except Exception as e:
+            logging.debug(f'DB Exception occured: {e}')
+            
 
         
 
@@ -974,8 +1021,10 @@ while True:
         FROM traveller_stats t   
         LEFT JOIN system_stats s ON s.location=t.location'''
         
-            
-        df_exo = pd.read_sql_query(exo_sql_query,conn)
+        try:    
+            df_exo = pd.read_sql_query(exo_sql_query,conn)
+        except Exception as e:
+            logging.debug(f'DB Exception occured: {e}')
         
         exo_detail_sql_query = '''SELECT t.system_name, t.location, t.location_orb, 
         o.body, o.wtype as type, o.day, o.year,
@@ -995,14 +1044,14 @@ while True:
         ON t.location_orb = e.location_orbit
         '''
 
-        df_exo_details = pd.read_sql_query(exo_detail_sql_query,conn)
+        try:
+            df_exo_details = pd.read_sql_query(exo_detail_sql_query,conn)
+        except Exception as e:
+            logging.debug(f'DB Exception occured: {e}')
 
         df_exo_details['atmos_pressure'] = round(df_exo_details['atmos_pressure'],2)
         df_exo_details['jump_point_distance'] = round(df_exo_details['jump_point_distance'],1)
         df_exo_details['mainworld_calc'] = round(df_exo_details['mainworld_calc'],2) 
-
-
-
 
 
 
