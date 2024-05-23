@@ -1,27 +1,25 @@
 def build_travellermap_file(db_name,sector_name):
+    
+    
+# 2025 05 23 - v 1.0.1a updated to handle NULL remarks and leverage traveller_functions
 
 
 # Traveller Map
 # Generate a TravellerMap-like extract for import into Traveller Map or other programs
-
-
-#   Open the SQLite 3 database
-
     import sqlite3
-    
-    
-    def tohex(dec):
-        if dec > 15: dec = 15
-        x = (dec % 16)
-        digits = "0123456789ABCDEF"
-        rest = dec / 16
-        # if (rest == 0):
-        return digits[int(x)]
-        # return tohex(rest) + digits[int(x)]
+    import logging 
+    from traveller_functions import tohex    
+
         
         
     def pad_space(detail,total):
-        spaces = total - len(detail)
+        
+        logging.debug(f'Detail: {detail}   Total: {total}')
+        if detail is not None:
+            spaces = total - len(detail)
+        else:
+            detail = ''
+            spaces = total
         for x in range(0,spaces):
             detail += ' '
         return detail
@@ -114,7 +112,7 @@ def build_travellermap_file(db_name,sector_name):
                         stars +                         
                         '\n')
             except:
-                print('Failed to update',trav_filename,uwp)
+                logging.debug(f'Failed to update {trav_filename} {uwp}')
                 
                 
     ### Produce a column-specific file for use with PyMapGen
@@ -211,6 +209,6 @@ Hex  Name                 UWP       Remarks                   {Ix}   (Ex)    [Cx
                         stars +                         
                         '\n')
             except:
-                print('Failed to update',trav_filename,uwp)
+                logging.debug(f'Failed to update {trav_filename} {location}')
                 
 
