@@ -9,7 +9,9 @@ def export_ss_to_pdf(db,ss):
     
     Export Sector Data into a PDF
     
-    v0.0.1
+    v 1.1.0b  2024-05-24  Added error variables to debug log in try/excepts   
+    v 1.1.0c  2024-05-24  Added style class to hold all styles
+    v 1.1.0d  2024-05-24  Cleaned up code
     """
     
     
@@ -51,9 +53,45 @@ def export_ss_to_pdf(db,ss):
     
     
 ### CLASSES    
+
+    class Program_details:
+        def __init__(self, db, ss):
+            self.db_name  = self._get_db(db)
+            self.sector   = self._get_sector(db)
+            self.subsector = self._get_subsector(ss)
+            self.output_file_name = self._get_output_file_name(db,ss)
+            self.image_path = self._get_image_path()
+            self.elems = []
+        
+        
+        
+        def _get_db(self, db):
+            return db
+        
+        def _get_sector(self, db):
+            return os.path.basename(self.db_name)[0:-3].capitalize()
+        
+        def _get_subsector(self, ss):
+            # Select the subsector letter
+            return ss
+        
+        def _get_output_file_name(self, db,ss):
+            return 'sector_db/subector_'+ ss + '.pdf'
+            
+            
+        def _get_image_path(self):
+            return 'covers/' + self.subsector + '.jpg'
+    
+
+    class Db_details:
+        def __init__(self, conn, cursor):
+            self.conn = None
+            self.cursor = None
+        
     
     class System_details:
-        def __init__(self, 
+        def __init__(self,
+                     location,
                      name, 
                      remarks,
                      ix,
@@ -66,6 +104,7 @@ def export_ss_to_pdf(db,ss):
                      w,
                      allegiance,
                      stars):
+            self.location = location
             self.name = name
             self.remarks = remarks
             self.ix = ix
@@ -94,12 +133,12 @@ def export_ss_to_pdf(db,ss):
     
     class Text_before_table:
         def __init__(self,
-                     header_line,
-                     t5_line,
-                     detail_line,
-                     gurps_line,
-                     wants_line,
-                     needs_line):
+                     header_line = None,
+                     t5_line = None,
+                     detail_line = None,
+                     gurps_line = None,
+                     wants_line = None,
+                     needs_line = None):
             self.header_line = header_line
             self.t5_line = t5_line
             self.detail_line = detail_line
@@ -107,18 +146,68 @@ def export_ss_to_pdf(db,ss):
             self.wants_line = wants_line
             self.needs_line = needs_line
             
+            
+        def populate_system_text_before_table(self, system_details, ex_styles):
+            self.header_line = Paragraph(f"(<b>{system_details.location}) {system_details.name}</b>", ex_styles.header_style)
+            self.t5_line = Paragraph(f"{system_details.remarks}   {system_details.ix}   {system_details.ex}  \
+                                     {system_details.cx}",  ex_styles.wantsneeds_style)
+            
+            self.detail_line = Paragraph(f"<b>Bases:</b> {system_details.bases}  \
+                                         <b>Travel Zone</b>: {system_details.zone}   \
+                                         <b>PBG:</b> {system_details.pbg}   \
+                                         <b>Stellar:</b> {system_details.stars}",  ex_styles.wantsneeds_style)
+            
+ 
+        def populate_trader_text_before_table(self, trader_details, ex_styles):
+             
+            self.gurps_line = Paragraph(f"<b>WTN:</b> {trader_details.wtn}  \
+                                           <b>GWP:</b> CR {trader_details.gwp} \
+                                           <b>Exchange:</b> {trader_details.exchange}",ex_styles.wantsneeds_style)
+             
+            self.wants_line = Paragraph(f"<b>Surplus:</b> {trader_details.wants}",  ex_styles.wantsneeds_style)
+             
+            self.needs_line = Paragraph(f"<b>Needs:</b> {trader_details.needs} ",  ex_styles.wantsneeds_style)    
+            
+           
     class Culture_lines:
         def __init__(self,
-                     header_line,
-                     age_line,
-                     status_quo_line,
-                     symbol_line,
-                     skills_line):
+                     header_line = None,
+                     age_line = None,
+                     status_quo_line = None,
+                     symbol_line = None,
+                     skills_line = None):
             self.header_line = header_line
             self.age_line = age_line
             self.status_quo_line = status_quo_line
             self.symbol_line = symbol_line
             self.skills_line = skills_line
+            
+            
+        def populate_culture_lines(self, culture_details, ex_styles):    
+            
+            self.header_line = Paragraph("Cultural Perception",ex_styles.detail_style)
+        
+            self.age_line = Paragraph(f"{culture_details.age.capitalize()}.  \
+                                       {culture_details.appearance.capitalize()} appearance. \
+                                       {culture_details.tendency.capitalize()} tendency.", ex_styles.wantsneeds_style)
+                               
+            self.status_quo_line = Paragraph(f"<b>Spr: </b>{culture_details.spiritual_outlook.capitalize()}. \
+                                              <b>StQ: </b>{culture_details.status_quo_outlook.capitalize()}. \
+                                              <b>Cus: </b>{culture_details.custom.capitalize()}.  \
+                                              <b>Int: </b>{culture_details.interest.capitalize()}.", ex_styles.wantsneeds_style)            
+                                              
+            self.symbol_line = Paragraph(f"Mat{culture_details.materialism_symbol}  \
+                                          Hon{culture_details.honesty_symbol} \
+                                          Brv{culture_details.bravery_symbol}  \
+                                          SC{culture_details.social_conflict_symbol}  \
+                                          WE{culture_details.work_ethic_symbol}  \
+                                          Con{culture_details.consumerism_symbol}", ex_styles.wantsneeds_style)
+                                          
+                           
+            self.skills_line = Paragraph(f"<b>Common skills:</b> {culture_details.common_skills}", ex_styles.wantsneeds_style)  
+        
+                  
+            
             
       
     class Detail_stats:
@@ -192,18 +281,139 @@ def export_ss_to_pdf(db,ss):
             self.hrs_5g = hrs_5g
             self.hrs_6g = hrs_6g
             
+    class Export_page_styles():
+        def __init__(self,
+                     header_style = None,
+                     travel_style = None,
+                     wants_needs_style = None,
+                     detail_style = None,
+                     detail_header_style = None,
+                     detail_table_style = None,
+                     image_table_style = None,
+                     summary_table_style = None,
+                     index_header_style = None,
+                     index_table_style = None,
+                     index_entry_style = None
+                     ):
+            self.header_style = header_style
+            self.travel_style = travel_style
+            self.wants_needs_style = wants_needs_style
+            self.details_style = detail_style
+            self.detail_header_style = detail_header_style
+            self.detail_table_style = detail_table_style
+            self.image_table_style = image_table_style
+            self.summary_table_style = summary_table_style
+            self.index_header_style = index_header_style
+            self.index_table_style = index_table_style
+            self.index_entry_style = index_entry_style
+            
+        def populate_styles(self):
+            styles = getSampleStyleSheet()
+        
+            self.header_style = ParagraphStyle(
+                name='Header',
+                parent=styles['Normal'], 
+                fontName="Courier",  # Specify the font name
+                fontSize=14,  # Specify the font size
+                textColor='black',  # Specify the text color
+                spaceBefore=0,  # Add space before the paragraph
+                spaceAfter=10  # Add space after the paragraph
+            )
+        
+        
+        
+            self.travel_style = ParagraphStyle(
+                name='LineText',  # Give it a unique name
+                parent=styles["BodyText"],
+                fontName="Courier",
+                fontSize=7,
+                textColor=colors.whitesmoke,
+                spaceBefore=0,
+                spaceAfter=0
+            )
+        
+        
+            self.wantsneeds_style = ParagraphStyle(
+                name='WantsNeedsText',  # Give it a unique name
+                parent=styles["BodyText"],
+                fontName="Courier",
+                fontSize=7,
+                textColor=colors.black,
+                spaceBefore=0,
+                spaceAfter=0
+            )
+            
+            self.detail_style = ParagraphStyle(
+                name='DetailText',  # Give it a unique name
+                parent=styles["BodyText"],
+                fontName="Courier",
+                fontSize=9,
+                textColor=colors.black,
+                spaceBefore=0,
+                spaceAfter=0
+            )
+            
+            self.detail_header_style = ParagraphStyle(
+                name='DetailHeader',  # Give it a unique name
+                parent=styles["Normal"],
+                fontName="Courier",
+                fontSize=10,
+                textColor=colors.whitesmoke,
+                spaceBefore=5,
+                spaceAfter=5
+            )
+            
+            self.detail_table_style = TableStyle([
+                    ('BACKGROUND', (0,0), (-1,0), colors.gray),
+                    ('TEXTCOLOR', (0,0), (-1,0), colors.black),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), 
+                    ('LINEBELOW', (0, 0), (-1, 0), 1, 'gray'), 
+                    ('LINEABOVE', (0, 1), (-1, -1), 1, 'gray'), 
+                    ('FONTNAME', (0, 0), (-1, -1), 'Courier'), 
+          
+                ])
+            
+            self.image_table_style = TableStyle([
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('BACKGROUND', (0,0), (-1,0), colors.gray),
+                    ])
+                   
+            
+            
+            self.summary_table_style = TableStyle([
+                    ('BACKGROUND', (0,0), (-1,0), colors.gray),
+                    ('BACKGROUND', (0,1), (-1,-1), colors.lightgrey),
+                    ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                    ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                    
+                    
+                    ('FONTNAME', (0,0), (-1,-1), 'Courier'),
+                    ('FONTNAME', (0,1), (1, -1), 'Helvetica'),
+                    
+                    ('FONTSIZE', (3,1), (-1, -1), 7), 
+                    ('FONTSIZE', (0,1), (2, -1), 7),
+                   
+    
+                    ('GRID',(0,1),(-1,-1),.5,colors.black),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')])
+            
+            self.index_header_style = ParagraphStyle(name='IndexHeader', fontSize=12, alignment=TA_CENTER)
+                   
+            self.index_table_style = TableStyle([
+                    ('FONTNAME', (0,0), (-1,-1), 'Courier'),
+                    ('FONTSIZE', (0,0), (-1, -1), 7), 
+                    ])
+            
+            self.index_entry_style = ParagraphStyle(name='IndexEntry', fontSize=7)
+                   
+
+
+
+
         
 ### FUNCTIONS
 
-    
-    def get_db(db):
-        # Select the db file to print
-        return db
-    
-    def get_subsector(ss):
-        # Select the subsector letter
-        return ss
-    
     def get_location(c, subsector):
         # Produce a list of locations to be included in the export
         
@@ -237,13 +447,8 @@ def export_ss_to_pdf(db,ss):
         c.execute(name_sql, location_list)
         index_name_list = c.fetchall()
         sorted_list = sorted(index_name_list , key=lambda x: x[0])
-        return sorted_list         
-    
-    
-    def get_output_file_name(db,ss):
+        return sorted_list     
 
-        name = 'sector_db/subector_'+ ss + '.pdf'
-        return name
     
     def get_culture_stats(c, location):
         culture_sql = '''SELECT age, appearance,tendency, materialism, honesty, 
@@ -331,7 +536,7 @@ def export_ss_to_pdf(db,ss):
         return orbital_detail_data, journey_detail_data
     
     
-    def build_cover_page(sector,subsector):
+    def build_cover_page(program_details):
         
      # Create a canvas
      cover = canvas.Canvas("sector_db/cover.pdf", pagesize=letter)
@@ -349,7 +554,7 @@ def export_ss_to_pdf(db,ss):
      y = (page_height - image_height) / 2
      
      # Draw the image
-     cover.drawImage(image_path, x, y, width=image_width, height=image_height)
+     cover.drawImage(program_details.image_path, x, y, width=image_width, height=image_height)
   
      
      # Set the fill color to white
@@ -358,11 +563,11 @@ def export_ss_to_pdf(db,ss):
      # Add text on top of the image
   
      cover.setFont("Helvetica-Bold", 20)    
-     text_sector = f"{sector}"
+     text_sector = f"{program_details.sector}"
   
       
      cover.setFont("Helvetica", 18) 
-     text_subsector = f"Subsector {subsector}"
+     text_subsector = f"Subsector {program_details.subsector}"
 
      cover.drawString(100, 675, text_sector)  # Adjust x, y coordinates as needed
      cover.drawString(100, 655, text_subsector)  # Adjust x, y coordinates as needed
@@ -371,19 +576,19 @@ def export_ss_to_pdf(db,ss):
      
      cover.save()   
     
-    def build_sector_map(db_name, sector):
+    def build_sector_map(program_details):
         try:
             logging.debug('Traveller Sector Map')
 
             
-            tab = db_name + '_tab.txt'  
-            routes = db_name + '_routes.txt'  
+            tab = program_details.db_name + '_tab.txt'  
+            routes = program_details.db_name + '_routes.txt'  
             url = "https://travellermap.com/api/poster?style=print"
             files = {
             'file': tab,
             'metadata': routes
             }
-            png_name = db_name + '_sector_map.png'
+            png_name = program_details.db_name + '_sector_map.png'
               
             
             api_parm_object = Api_image_parameters(url, files, png_name)
@@ -393,8 +598,8 @@ def export_ss_to_pdf(db,ss):
             logging.debug("Traveller Map File Saved")   
            
               
-        except:
-            logging.debug('Unexpected error in Traveller Map API')
+        except Exception as e:
+            logging.debug(f'Unexpected error in Traveller Map API {e}')
         
         
        
@@ -424,7 +629,7 @@ def export_ss_to_pdf(db,ss):
         # Add text on top of the image
      
         sec_map.setFont("Helvetica-Bold", 20)    
-        text_sector = f"{sector}"
+        text_sector = f"{program_details.sector}"
      
 
         sec_map.drawString(90, 750, text_sector)  # Adjust x, y coordinates as needed
@@ -437,7 +642,7 @@ def export_ss_to_pdf(db,ss):
 
 
 
-    def build_system_images(system_details):
+    def build_system_images(system_details, trader_details):
         
         system_images = []
         
@@ -495,11 +700,11 @@ def export_ss_to_pdf(db,ss):
                 system_image.drawWidth = 25
                 system_image.drawHeight = 25
                 system_images.append(system_image)
-                logging.debug(f'Remark found in {location}: {system_image_path}')
+                logging.debug(f'Remark found in {system_details.location}: {system_image_path}')
         return system_images
         
     
-    def add_images_to_elems(system_images, elems):
+    def add_images_to_elems(system_images, elems, ex_styles):
         
         if len(system_images) > 0:
     
@@ -507,16 +712,13 @@ def export_ss_to_pdf(db,ss):
             # Create a table with a single row and add the images to it
             system_image_table = Table([system_images])
             
-            system_image_table.setStyle([
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('BACKGROUND', (0,0), (-1,0), colors.gray),
-            ])
+            system_image_table.setStyle(ex_styles.image_table_style)
                
     
             elems.append(system_image_table)
         
         else:
-            logging.debug(f'No images for system {location}')
+            logging.debug('No images for system')
             
         return elems    
 
@@ -594,30 +796,16 @@ def export_ss_to_pdf(db,ss):
             return detail_body
         
         
-    def build_detail_headers(detail_stats,travel_hours_string):
+    def build_detail_headers(d, detail_stats,travel_hours_string, ex_styles):
         return      [
-                        Paragraph(f"<b>({d})</b>", detail_header_style),
-                        Paragraph(f"<b>{detail_stats.name}</b>", detail_header_style),
-                        Paragraph(f"<b>{detail_stats.location}</b>", detail_header_style),  
-                        Paragraph(f"<b>{detail_stats.uwp}</b>", detail_header_style),
+                        Paragraph(f"<b>({d})</b>", ex_styles.detail_header_style),
+                        Paragraph(f"<b>{detail_stats.name}</b>", ex_styles.detail_header_style),
+                        Paragraph(f"<b>{detail_stats.location}</b>", ex_styles.detail_header_style),  
+                        Paragraph(f"<b>{detail_stats.uwp}</b>", ex_styles.detail_header_style),
                         None,
-                        Paragraph(f"<b>{travel_hours_string}</b>", travel_style), 
+                        Paragraph(f"<b>{travel_hours_string}</b>", ex_styles.travel_style), 
                     ]
                     
-        
-        
-    def build_detail_table_style():
-        return    TableStyle([
-                        ('BACKGROUND', (0,0), (-1,0), colors.gray),
-                        ('TEXTCOLOR', (0,0), (-1,0), colors.black),
-                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Align all cells to the left
-                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Align all cells to the middle vertically
-                        ('LINEBELOW', (0, 0), (-1, 0), 1, 'gray'),  # Add a line below the first row
-                        ('LINEABOVE', (0, 1), (-1, -1), 1, 'gray'),  # Add a line above each row starting from the second row
-                        ('FONTNAME', (0, 0), (-1, -1), 'Courier'), 
-              
-                    ])
-        
         
     def build_images(detail_stats):
         images = []
@@ -650,7 +838,7 @@ def export_ss_to_pdf(db,ss):
 
 
         if detail_stats.wtype[0] == 'Ocean*':
-            logging.debug(f'Found an Ocean world {location}: {detail_stats.name} ')
+            logging.debug(f'Found an Ocean world {detail_stats.location}: {detail_stats.name} ')
             image_path = "images/ocean.png"
             image = Image(image_path)
             image.drawWidth = 25
@@ -706,42 +894,29 @@ def export_ss_to_pdf(db,ss):
         return images
 
 
-    def build_image_table_style(image_table):
-           return image_table.setStyle([
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('BACKGROUND', (0,0), (-1,0), colors.gray),
-            ])
-
-
-    def append_detail_entry():
-        
-        detail_stats = get_detail_stats_object(c,d,uwp_dict)
+    def append_detail_entry(d, detail_stats, ex_styles, program_details):
         
         travel_hours_string = build_travel_hours_string(detail_stats)
         
-        detail_headers = build_detail_headers(detail_stats, travel_hours_string)
+        detail_headers = build_detail_headers(d, detail_stats, travel_hours_string, ex_styles)
         
         images = build_images(detail_stats)
     
         image_table = Table([images])
         
-        image_table_style = build_image_table_style(image_table)
-        
-        image_table.setStyle(image_table_style)
+        image_table.setStyle(ex_styles.image_table_style)
     
-        detail_body = build_detail_body(detail_stats, detail_style)
+        detail_body = build_detail_body(detail_stats, ex_styles.detail_style)
     
-        detail_table_style = build_detail_table_style()
-        
         detail_table = Table([detail_headers] + detail_body)
     
-        detail_table.setStyle(detail_table_style)              
+        detail_table.setStyle(ex_styles.detail_table_style)              
     
         detail_table = KeepTogether([image_table,detail_table])
     
-        elems.append(detail_table)
+        program_details.elems.append(detail_table)
     
-        elems.append(Spacer(1, 30)) 
+        program_details.elems.append(Spacer(1, 30)) 
     
     def get_culture_stats_object(c, location):
         culture_detail_row = get_culture_stats(c, location)
@@ -817,6 +992,7 @@ def export_ss_to_pdf(db,ss):
         system_row = get_system_stats(c, location)
     #    logging.debug(system_row)
         system_object = System_details(
+        location,
         system_row[0][0],
         system_row[0][1],
         system_row[0][2],
@@ -893,69 +1069,6 @@ def export_ss_to_pdf(db,ss):
         return df
     
     
-    def get_styles():
-        # Get styles for the Header, Lines, and WantsNeeds sections of the page
-        
-        
-        # Get the default sample stylesheet
-        styles = getSampleStyleSheet()
-    
-        header_style = ParagraphStyle(
-            name='Header',
-            parent=styles['Normal'], 
-            fontName="Courier",  # Specify the font name
-            fontSize=14,  # Specify the font size
-            textColor='black',  # Specify the text color
-            spaceBefore=0,  # Add space before the paragraph
-            spaceAfter=10  # Add space after the paragraph
-        )
-    
-    
-    
-        travel_style = ParagraphStyle(
-            name='LineText',  # Give it a unique name
-            parent=styles["BodyText"],
-            fontName="Courier",
-            fontSize=7,
-            textColor=colors.whitesmoke,
-            spaceBefore=0,
-            spaceAfter=0
-        )
-    
-    
-        wantsneeds_style = ParagraphStyle(
-            name='WantsNeedsText',  # Give it a unique name
-            parent=styles["BodyText"],
-            fontName="Courier",
-            fontSize=7,
-            textColor=colors.black,
-            spaceBefore=0,
-            spaceAfter=0
-        )
-        
-        detail_style = ParagraphStyle(
-            name='DetailText',  # Give it a unique name
-            parent=styles["BodyText"],
-            fontName="Courier",
-            fontSize=9,
-            textColor=colors.black,
-            spaceBefore=0,
-            spaceAfter=0
-        )
-        
-        detail_header_style = ParagraphStyle(
-            name='DetailHeader',  # Give it a unique name
-            parent=styles["Normal"],
-            fontName="Courier",
-            fontSize=10,
-            textColor=colors.whitesmoke,
-            spaceBefore=5,
-            spaceAfter=5
-        )
-    
-    
-        
-        return header_style, travel_style, wantsneeds_style, detail_style, detail_header_style
     
     def get_summary_table_data(df):
         data = [
@@ -975,29 +1088,7 @@ def export_ss_to_pdf(db,ss):
         data += list_of_lists
         
         return data
-    
-    
-    
-        
-    def get_summary_table_style():
-        style = TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.gray),
-            ('BACKGROUND', (0,1), (-1,-1), colors.lightgrey),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-            
-            
-            ('FONTNAME', (0,0), (-1,-1), 'Courier'),
-            ('FONTNAME', (0,1), (1, -1), 'Helvetica'),
-            
-            ('FONTSIZE', (3,1), (-1, -1), 7), 
-            ('FONTSIZE', (0,1), (2, -1), 7),
-           
 
-            ('GRID',(0,1),(-1,-1),.5,colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')])  
-        return style
-    
     def alternate_background(table, table_data):
         row_num = len(table_data)
         for i in range(1,row_num):
@@ -1066,18 +1157,18 @@ def export_ss_to_pdf(db,ss):
     
             
     # Generate paragraphs from index entries
-    def create_index_paragraphs(index_name_list):
+    def create_index_paragraphs(index_name_list, ex_styles):
         for index_entry in index_name_list:
             if index_entry[0] != '*':
                 cell_content = f"{index_entry[0]}: {index_entry[1]}"
             else:
                 cell_content = "  "
-            yield Paragraph(cell_content, ParagraphStyle(name='IndexEntry', fontSize=7))    
+            yield Paragraph(cell_content, ex_styles.index_entry_style)    
     
     
     
     # Generate and add the index table
-    def create_index_table(paragraphs):
+    def create_index_table(paragraphs, index_table_style):
         # Define parameters
         num_columns = 4  # Adjust as needed
         page_width, page_height = letter
@@ -1092,115 +1183,88 @@ def export_ss_to_pdf(db,ss):
             table_data.append(row_data)
     
         # Create table object
-        index_table = Table(table_data, colWidths=[column_width] * num_columns, style=[
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Center all cells vertically
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center the entire table horizontally
-        ])
+        index_table = Table(table_data, colWidths=[column_width] * num_columns, style=index_table_style)
     
         return index_table
     
     
+    def build_index(index_name_list, ex_styles):
+        pdf_index = []
         
-
+        pdf_index.append(PageBreak())
         
-### PROGRAM START
-    
-    
-    # Set parameters and file names
-    db_name = get_db(db)
-    sector = os.path.basename(db_name)[0:-3].capitalize()
-    subsector = get_subsector(ss)
-    output_file_name = get_output_file_name(db_name,subsector)
-    image_path = 'covers/' + subsector + ".jpg"
-    elems = []
-    
-    
-    # Connect to DB
-    conn = sqlite3.connect(db_name)
-    c = conn.cursor()
-    
-    # Gather Data
-    location_list = get_location(c, subsector)
-    index_name_list = get_index_names(c, location_list)
-    header_style, travel_style, wantsneeds_style, detail_style, detail_header_style = get_styles()
-    
-    build_cover_page(sector,subsector)
-    build_sector_map(db_name, sector)
-
-    
-    first_run = True
-    for location in location_list:
-
-     
-        if not first_run:
-            elems.append(PageBreak())       
-        else:
-            first_run = False
-     
+        index_header_style = ex_styles.index_header_style
         
-        system_details = get_system_object(c, location)
+        pdf_index.append(Paragraph('INDEX', index_header_style))
+        pdf_index.append(Spacer(1,30))
+        
+        index_page_limit = 120
+        index_name_total = len(index_name_list)
+        
+        padding_entries = index_page_limit - (index_name_total % index_page_limit)
+        if padding_entries > 0:
+            for each_entry in range(0, padding_entries): index_name_list.append(('*','*'))
+        
+        index_name_total = len(index_name_list)
+        
+        index_name_pages = index_name_total // index_page_limit 
+        
+        logging.debug(f"Total index entries: {index_name_total}")
+        logging.debug(f"Total expected index pages: {index_name_pages}")
+        
+        
+        for index_page in range(0,index_name_pages):
+            page_start = index_page_limit * index_page
+            page_end = page_start + index_page_limit
+            if page_end > index_name_total: page_end = index_name_total
+            index_sub_list = index_name_list[page_start:page_end]
+        
+            reordered_index = reorder_for_table(index_sub_list, 4)
+            
+            index_paragraphs = list(create_index_paragraphs(reordered_index, ex_styles))
+            index_table = create_index_table(index_paragraphs, ex_styles.index_table_style) 
+           
+            pdf_index.append(index_table)  # Add the table to the index list
+            pdf_index.append(PageBreak())
+    
 
-        trader_details = get_far_trader_object(c, location)
+        return pdf_index        
 
-        system_images = build_system_images(system_details)
+    def append_system_data(location, 
+                                program_details, 
+                                export_page_styles,
+                                cursor,
+                                conn):
+        
+        system_details = get_system_object(cursor, location)
+
+        trader_details = get_far_trader_object(cursor, location)
+
+        system_images = build_system_images(system_details, trader_details)
         
         system_images = add_remarks_images(system_images, system_details)
 
-        elems = add_images_to_elems(system_images, elems)
+        program_details.elems = add_images_to_elems(system_images, program_details.elems, export_page_styles)
         
+        text_before_table = Text_before_table()
         
-        text_1 = Paragraph(f"(<b>{location}) {system_details.name}</b>", header_style)
-        text_2 = Paragraph(f"{system_details.remarks}   {system_details.ix}   {system_details.ex}  \
-                                        {system_details.cx}", wantsneeds_style)
-        text_3 = Paragraph(f"<b>Bases:</b> {system_details.bases}  <b>Travel Zone</b>: {system_details.zone}   \
-                             <b>PBG:</b> {system_details.pbg}   <b>Stellar:</b> {system_details.stars}", wantsneeds_style)
-        text_4 = Paragraph(f"<b>WTN:</b> {trader_details.wtn}  <b>GWP:</b> CR {trader_details.gwp}  <b>Exchange:</b> {trader_details.exchange}",wantsneeds_style)
-        text_5 = Paragraph(f"<b>Surplus:</b> {trader_details.wants}", wantsneeds_style)
-        text_6 = Paragraph(f"<b>Needs:</b> {trader_details.needs} ", wantsneeds_style)
-    
-        text_before_table = Text_before_table(text_1,text_2,text_3,text_4,text_5,text_6)
-        
-        # Orbital Data Table Activities 
+        text_before_table.populate_system_text_before_table(system_details, export_page_styles)
+        text_before_table.populate_trader_text_before_table(trader_details, export_page_styles)
+
+
+        # Orbital Data Table for Location 
         df = get_orbital_data(conn, location)
+        
         summary_table_data = get_summary_table_data(df)
         summary_table = get_summary_table(summary_table_data)
-        summary_table_style = get_summary_table_style()
-        summary_table.setStyle(summary_table_style)
+        summary_table.setStyle(export_page_styles.summary_table_style)
         alternate_background(summary_table, summary_table_data)
         
-        culture_details = get_culture_stats_object(c, location)
-       # logging.debug(f"materialism: {culture_details.materialism_symbol}")
+        culture_details = get_culture_stats_object(cursor, location)
+        culture_lines = Culture_lines()
+        culture_lines.populate_culture_lines(culture_details, export_page_styles)
         
-        culture_header_line = Paragraph("Cultural Perception",detail_style)
-        culture_age_line = Paragraph(f"{culture_details.age.capitalize()}.  \
-                                       {culture_details.appearance.capitalize()} appearance. \
-                                       {culture_details.tendency.capitalize()} tendency." ,wantsneeds_style)
-                               
-        culture_status_quo_line = Paragraph(f"<b>Spr: </b>{culture_details.spiritual_outlook.capitalize()}. \
-                                              <b>StQ: </b>{culture_details.status_quo_outlook.capitalize()}. \
-                                              <b>Cus: </b>{culture_details.custom.capitalize()}.  \
-                                              <b>Int: </b>{culture_details.interest.capitalize()}.",wantsneeds_style)            
-                                              
-        culture_symbol_line = Paragraph(f"Mat{culture_details.materialism_symbol}  \
-                                          Hon{culture_details.honesty_symbol} \
-                                          Brv{culture_details.bravery_symbol}  \
-                                          SC{culture_details.social_conflict_symbol}  \
-                                          WE{culture_details.work_ethic_symbol}  \
-                                          Con{culture_details.consumerism_symbol}",wantsneeds_style)
-                                          
-                           
-        culture_skills_line = Paragraph(f"<b>Common skills:</b> {culture_details.common_skills}",wantsneeds_style)  
-        
-        #logging.debug(f'Common skills for {location} are: {culture_details.common_skills}')
-                                      
-                                 
-        culture_lines = Culture_lines(culture_header_line,
-                                        culture_age_line,
-                                        culture_status_quo_line,
-                                        culture_symbol_line,
-                                        culture_skills_line)
-        
-        elems += update_summary_elems(text_before_table, summary_table, culture_lines)
+        program_details.elems += update_summary_elems(text_before_table, summary_table, culture_lines)
         
     
         # Begin work on individual orbital bodies details
@@ -1215,68 +1279,79 @@ def export_ss_to_pdf(db,ss):
     
     
         for d in detail_list:
+            detail_stats = get_detail_stats_object(cursor,d,uwp_dict)                
+            append_detail_entry(d, detail_stats, export_page_styles, program_details)
             
-            append_detail_entry()
-              
-    
+            
+
+    def program_control(db,ss):
+        program_details = Program_details(db, ss)
+        
+     
+        # Connect to DB
+
+        conn = sqlite3.connect(program_details.db_name)
+        cursor = conn.cursor()
+        
+        # Gather Data
+        location_list = get_location(cursor, program_details.subsector)
+        index_name_list = get_index_names(cursor, location_list)
+
+        export_page_styles = Export_page_styles()
+        export_page_styles.populate_styles()
+        
+        
+        build_cover_page(program_details)
+        build_sector_map(program_details)
+
+        
+        first_run = True
+        for location in location_list:
+
+         
+            if first_run:
+                program_details.elems.append(PageBreak())       
+            else:
+                first_run = False
+                
+            append_system_data(location, 
+                                    program_details, 
+                                    export_page_styles,
+                                    cursor,
+                                    conn)
+         
+            
+
+        
+        # Add PageBreak to start the index on a new page
+        pdf_index = build_index(index_name_list, export_page_styles)
+        
+        
+        
+        # Append the index_table to the elems list
+        program_details.elems += pdf_index
+        
+        # Assign the custom canvas with page numbers to the PDF document
+        pdf = SimpleDocTemplate(program_details.output_file_name,page_size = letter)
+        pdf.build(program_details.elems, onLaterPages=add_page_number)
+        
+        # Merge the cover PDF with the main PDF
+        merger = PdfMerger()
+        merger.append("sector_db/cover.pdf")  # Add the cover PDF
+        merger.append("sector_db/sec_map.pdf")  # Add the cover PDF
+        merger.append(program_details.output_file_name)
+        merger.write(program_details.output_file_name)  # Save the merged PDF
+        merger.close()
+        
+        
+        conn.commit()  
+        cursor.close()
+        conn.close() 
 
     
-    # Add PageBreak to start the index on a new page
-    pdf_index = []
-    
-    pdf_index.append(PageBreak())
-    
-    index_header_style = ParagraphStyle(name='IndexHeader', fontSize=12, alignment=TA_CENTER)
-    
-    pdf_index.append(Paragraph('INDEX', index_header_style))
-    pdf_index.append(Spacer(1,30))
-    
-    index_page_limit = 120
-    index_name_total = len(index_name_list)
-    
-    padding_entries = index_page_limit - (index_name_total % index_page_limit)
-    if padding_entries > 0:
-        for each_entry in range(0, padding_entries): index_name_list.append(('*','*'))
-    
-    index_name_total = len(index_name_list)
-    
-    index_name_pages = index_name_total // index_page_limit 
-    
-    logging.debug(f"Total index entries: {index_name_total}")
-    logging.debug(f"Total expected pages: {index_name_pages}")
-    
-    
-    for index_page in range(0,index_name_pages):
-        page_start = index_page_limit * index_page
-        page_end = page_start + index_page_limit
-        if page_end > index_name_total: page_end = index_name_total
-        index_sub_list = index_name_list[page_start:page_end]
-    
-        reordered_index = reorder_for_table(index_sub_list, 4)
         
-        index_paragraphs = list(create_index_paragraphs(reordered_index))
-        index_table = create_index_table(index_paragraphs)  # Call the function
-       
-        pdf_index.append(index_table)  # Add the table to the index list
-        pdf_index.append(PageBreak())
-    
-    
-    # Append the index_table to the elems list
-    elems += pdf_index
-    
-    # Assign the custom canvas with page numbers to the PDF document
-    pdf = SimpleDocTemplate(output_file_name,page_size = letter)
-    pdf.build(elems, onLaterPages=add_page_number)
-    
-    # Merge the cover PDF with the main PDF
-    merger = PdfMerger()
-    merger.append("sector_db/cover.pdf")  # Add the cover PDF
-    merger.append("sector_db/sec_map.pdf")  # Add the cover PDF
-    merger.append(output_file_name)
-    merger.write(output_file_name)  # Save the merged PDF
-    merger.close()
-    
-    
-    conn.commit()  
-    c.close()
-    conn.close() 
+### FUNCTION START
+
+    program_control(db,ss)
+
+
