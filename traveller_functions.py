@@ -2,6 +2,9 @@
 """
 Created on Thu Dec  2 16:35:43 2021
 
+v 1.1.0e  2024-05-24  Added error variables to debug log in try/excepts     
+
+
 @author: sean
 """
 
@@ -28,17 +31,19 @@ def integer_root(expo,num):
     return float(num ** root_expo)
 
 def tohex(dec):
-    if dec > 15: dec = 15
-    x = (dec % 16)
-    digits = "0123456789ABCDEF"
-    return digits[int(x)]
+    hex_digits = "0123456789ABCDEFGHJ"
+    if dec > 18:
+        dec = 18
+    return hex_digits[dec % 17]
 
     
 def hex_to_int(hex_val):
-    response = -1
+    response = hex_val
     try:
-        hex_list = ['A','B','C','D','E','F']
-        hex_dict = {'F': 15,
+        hex_list = ['A','B','C','D','E','F','G','H']
+        hex_dict = {'H': 17,
+                    'G': 16,
+                    'F': 15,
                     'E': 14,
                     'D': 13,
                     'C': 12,
@@ -47,8 +52,8 @@ def hex_to_int(hex_val):
         if hex_val in hex_list: response = int(hex_dict[hex_val])
         else: response = int(response)
         return response
-    except:
-        print('failed hex to int with',hex_val)
+    except Exception as e:  
+        logging.debug(f'failed hex_to_int with {hex_val} {e}')
         
 def cx_values(cx):
         het_no = hex_to_int(cx[0])
@@ -287,8 +292,8 @@ def download_image_via_api(api_image_parameters):
         else:
             logging.debug('API response received but unexpected format')
 
-      except:
-          logging.debug('Failed api')
+      except Exception as e:
+          logging.debug(f'Failed api {e}')
     
         
 

@@ -7,8 +7,7 @@ def create_route_xml(seed_number,db_name, settlement_mod):
     import numpy as np
     import networkx as nx
     import warnings
-    
-    
+
     def offset_to_cube(location):
         x = int(location[0:2])
         y = int(location[2:4])

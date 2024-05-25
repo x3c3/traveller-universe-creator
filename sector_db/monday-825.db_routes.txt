@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<Sector>
+<Name>sector_db/monday-825.db</Name>
+<Routes>...
+    <Route Start='2129' End='2331'  />
+    <Route Start='2129' End='1926'  />
+    <Route Start='1926' End='2325'  />
+    <Route Start='2129' End='2331'  />
+    <Route Start='2331' End='2431'  />
+    <Route Start='2431' End='2832'  />
+    <Route Start='1938' End='2138'  />
+    <Route Start='2138' End='2540'  />
+    <Route Start='2129' End='1926'  />
+    <Route Start='1926' End='2325'  />
+    <Route Start='2129' End='2331'  />
+    <Route Start='2325' End='2328'  />
+    <Route Start='2328' End='2331'  />
+    <Route Start='2331' End='2431'  />
+    <Route Start='2431' End='2832'  />
+    <Route Start='2540' End='2837'  />
+    <Route Start='2837' End='3138'  />
+    <Route Start='1920' End='2023'  />
+    <Route Start='2023' End='2325'  />
+    <Route Start='2832' End='2736'  />
+    <Route Start='2736' End='3138'  />
+    <Route Start='1330' End='1729'  />
+    <Route Start='1729' End='2129'  />
+    <Route Start='1214' End='1011'  />
+    <Route Start='1011' End='1007'  />
+    <Route Start='1007' End='1406'  />
+    <Route Start='0215' End='0413'  />
+    <Route Start='0413' End='0812'  />
+    <Route Start='0812' End='1214'  />
+    <Route Start='0328' End='0628'  />
+    <Route Start='0628' End='0931'  />
+    <Route Start='0931' End='1330'  />
+    <Route Start='1406' End='1410'  />
+    <Route Start='1410' End='1812'  />
+    <Route Start='1812' End='1916'  />
+    <Route Start='1916' End='1920'  />
+</Routes>
+<Labels>
+    <Label Hex='0215' Color="red">Ix+</Label>
+    <Label Hex='0328' Color="red">Ix+</Label>
+    <Label Hex='1214' Color="red">Ix+</Label>
+    <Label Hex='1330' Color="red">Ix+</Label>
+    <Label Hex='1406' Color="red">Ix+</Label>
+    <Label Hex='1920' Color="red">Ix+</Label>
+    <Label Hex='1938' Color="red">Ix+</Label>
+    <Label Hex='2129' Color="red">Ix+</Label>
+    <Label Hex='2325' Color="red">Ix+</Label>
+    <Label Hex='2331' Color="red">Ix+</Label>
+    <Label Hex='2540' Color="red">Ix+</Label>
+    <Label Hex='2832' Color="red">Ix+</Label>
+    <Label Hex='3138' Color="red">Ix+</Label>
+</Labels>
+</Sector>

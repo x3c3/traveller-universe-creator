@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-
-@author: sean
+v 1.0.0 2022-11-17 
 """
 import PySimpleGUI as sg
 
 import logging
 import warnings
 from traveller_master import make_sector_master
-
 
   
 try:    

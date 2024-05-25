@@ -1,7 +1,8 @@
 def build_travellermap_file(db_name,sector_name):
     
     
-# 2025 05 23 - v 1.0.1a updated to handle NULL remarks and leverage traveller_functions
+#v 1.0.1a  2024-05-23  updated to handle NULL remarks and leverage traveller_functions
+#v 1.1.0e  2024-05-24  Added error variables to debug log in try/excepts     
 
 
 # Traveller Map
@@ -111,8 +112,8 @@ def build_travellermap_file(db_name,sector_name):
                         allegiance + tab +
                         stars +                         
                         '\n')
-            except:
-                logging.debug(f'Failed to update {trav_filename} {uwp}')
+            except Exception as e:
+                logging.debug(f'Failed to update {trav_filename} {uwp} {e}')
                 
                 
     ### Produce a column-specific file for use with PyMapGen
@@ -208,7 +209,7 @@ Hex  Name                 UWP       Remarks                   {Ix}   (Ex)    [Cx
                         allegiance + tab +
                         stars +                         
                         '\n')
-            except:
-                logging.debug(f'Failed to update {trav_filename} {location}')
+            except Exception as e:
+                logging.debug(f'Failed to update {trav_filename} {location} {e}')
                 
 

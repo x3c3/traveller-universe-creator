@@ -1,17 +1,14 @@
 def generate_stars(db_name,decisions_provided):
 
+# v1.0.1 PBG Updated to include binaries
 
 # Sector Generation
-# by Sean Nelson
-
-
 
     import sqlite3
     import math 
     import random
     from traveller_functions import integer_root, roll_dice
 
-    
     def create_tables(c,conn):
         sql_create_stellar_bodies = """CREATE TABLE stellar_bodies( 
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -140,7 +137,7 @@ def generate_stars(db_name,decisions_provided):
     def get_stellarcharsv():
     # Loading the Stellar Characteristics for Class V Table         
         temp_stellarcharsv = {}
-        for line in open("Star Characteristics V.txt"):
+        for line in open(r"tables\Star Characteristics V.txt"):
             data = line.strip().split(',')
             temp_stellarcharsv[data[0]] = dict(zip(('temperature', 'luminosity', 'mass', 'radius', 'lifespan'), data[1:]))
           
@@ -149,7 +146,7 @@ def generate_stars(db_name,decisions_provided):
     def get_stellarcharsiii():
     # Loading the Stellar Characteristics for Class V Table         
         temp_stellarcharsiii = {}
-        for line in open("Star Characteristics III.txt"):
+        for line in open(r"tables\Star Characteristics III.txt"):
             data = line.strip().split(',')
             temp_stellarcharsiii[data[0]] = dict(zip(('temperature', 'luminosity', 'mass', 'radius', 'lifespan'), data[1:]))
           
@@ -159,7 +156,7 @@ def generate_stars(db_name,decisions_provided):
     def get_companion_separation():
     # Loading the Orbital Separation Table 
         temp_orbitalsep = {}
-        for line in open("Orbital Separation Table.txt"):
+        for line in open(r"tables\Orbital Separation Table.txt"):
             data = line.strip().split(',')
             temp_orbitalsep[data[0]] = dict(zip(('separation', 'orbital_mod'), data[1:])) 
         
@@ -168,7 +165,7 @@ def generate_stars(db_name,decisions_provided):
     def get_planet_density_table():
     # Loading the Planet Density Table
         temp_planet_density = {}
-        for line in open("Planet Density Table.txt"):
+        for line in open(r"tables\Planet Density Table.txt"):
             data = line.strip().split(',')
             temp_planet_density[data[0]] = dict(zip(('inside_snow_line', 'outside_snow_line'), data[1:])) 
            
@@ -177,7 +174,7 @@ def generate_stars(db_name,decisions_provided):
     def get_world_type_table():
     # Loading the World Type Table
         temp_world_type = {}
-        for line in open("World Type Table.txt"):
+        for line in open(r"tables\World Type Table.txt"):
             data = line.strip().split(',')
             temp_world_type[data[0]] = dict(zip(('Inner Zone', 'Life Zone', 'Middle Zone', 'Outer Zone', 'Forbidden'), data[1:])) 
            
@@ -1164,6 +1161,7 @@ def generate_stars(db_name,decisions_provided):
                             hill_radius = get_hill_radius(mass,current_distance,star["mass"])
                             
                             radius = size/2 * 1609.3
+                            
                             natural_moons = get_major_natural_satellites(hill_radius, current_distance )
                             if size < 25:
                                 impact_chance, impact_moons = get_major_impact_satellites(hill_radius, radius, location)

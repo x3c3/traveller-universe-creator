@@ -8,7 +8,8 @@ v 1.1.0a  2024-04-28  Fixed error when clicking Full System without mainworld se
 v 1.1.0b  2024-05-04  1. Fixed another error when clicking Full System without mainworld selected
                       2. Added confirmation windows for traveller map buttons  
 v 1.1.0c  2024-05-05  Added ring information for each orbital body          
-v 1.1.0d  2024-05-11  Moved remarks list to traveller_functions          
+v 1.1.0d  2024-05-11  Moved remarks list to traveller_functions    
+v 1.1.0e  2024-05-24  Added error variables to debug log in try/excepts      
 """
 
 import logging
@@ -33,7 +34,7 @@ from matplotlib import style
 from traveller_functions import tohex, get_description, get_remarks_list
 from traveller_functions import Api_image_parameters, download_image_via_api
 
-from export_sector import export_ss_to_pdf
+from export_sector import export_sector
 
 try:    
     import pyi_splash
@@ -507,8 +508,8 @@ def make_win2(star_columns,star_list,location):
                   sg.Column(star_column_three),sg.Column(star_column_four)],
                  [sg.Button('Exit')]
                  ]
-    except:
-             sg.Popup('Failed star layout')
+    except Exception as e: 
+             sg.Popup(f'Failed star layout {e}')
             
        
             
@@ -547,8 +548,8 @@ def make_win3(culture_columns,culture_list,location):
 
                  [sg.Button('Exit')]
                  ]
-    except:
-        sg.Popup('Failed culture layout')
+    except Exception as e:
+        sg.Popup(f'Failed culture layout: {e}')
        
         
         
@@ -589,8 +590,8 @@ def make_win4(needs_list,wants_list,location):
                   sg.Column(trade_column_three)],
                  [sg.Button('Exit')]
                  ]
-    except:
-        sg.Popup('Failed Trade Goods layout')
+    except Exception as e:
+        sg.Popup(f'Failed Trade Goods layout {e}')
         
         
             
@@ -695,8 +696,8 @@ def make_win5(db):
 
 
 
-    except:
-        sg.Popup('Failed export layout')
+    except Exception as e:
+        sg.Popup(f'Failed export layout {e}')
         
     
 
@@ -1095,8 +1096,8 @@ while True:
                     select_images(loc_info,system_info,detail_info,economic_info)
         
 
-                except:
-                    sg.Popup('Failed during Mainworld image creation')
+                except Exception as e:
+                    sg.Popup(f'Failed during Mainworld image creation {e}')
                 
             else:
                                 
@@ -1106,14 +1107,14 @@ while True:
                     loc_info = df_exo.loc[df_exo['location_orb'] == location_orb_name]
                     detail_info = df_exo_details[df_exo_details['location_orb'] == location_orb_name]
                     economic_info = df_economic[df_economic['location'] == location]
-                except:
-                    sg.Popup('Loc Info fail in Exo assignments')
+                except Exception as e:
+                    sg.Popup(f'Loc Info fail in Exo assignments {e}')
 
                 try:
                     update_stats(loc_info,system_info,detail_info,economic_info,m_labels,s_labels,d_labels,e_labels)
     
-                except:
-                    sg.Popup('for loops failed in Exo Assignments')
+                except Exception as e:
+                    sg.Popup(f'for loops failed in Exo Assignments {e}')
                     
 
                 try:
@@ -1121,8 +1122,8 @@ while True:
                     clear_images()
                     select_images(loc_info,system_info,detail_info,economic_info)
 
-                except:
-                    sg.Popup('Failed during non-mainworld Image creation')
+                except Exception as e:
+                    sg.Popup(f'Failed during non-mainworld Image creation {e}')
 
 
             try:  
@@ -1137,12 +1138,12 @@ while True:
 
             except Exception as e:
                 logging.debug(e)
-                logging.debug('Failed Map button')
+                logging.debug(f'Failed Map button {e}')
                     
 
         except Exception as e:
             print(e)
-            sg.popup('Error in LOCATION: '+detail_flag)
+            sg.popup(f'Error in LOCATION: {detail_flag} {e}')
         
     elif event == '-STELLAR-' and not window2:
         try:
@@ -1158,8 +1159,8 @@ while True:
             window2 = make_win2(star_columns,star_list,location)
   
 
-        except:
-            logging.debug('Failed Stellar button')
+        except Exception as e:
+            logging.debug(f'Failed Stellar button {e}')
             
     elif event == '-CULTURE-' and not window3:
         try:
@@ -1175,8 +1176,8 @@ while True:
             window3 = make_win3(culture_columns,culture_list,location)
   
 
-        except:
-            logging.debug('Failed Culture button')
+        except Exception as e:
+            logging.debug(f'Failed Culture button {e}')
             
     elif event == '-TRADE-' and not window3:
         try:
@@ -1206,7 +1207,7 @@ while True:
 
         except Exception as e:
             logging.debug(e)
-            logging.debug('Failed Trade button')        
+            logging.debug(f'Failed Trade button {e}')        
             
     elif event == '-SYSTEM-':
         if detail_flag == 'main_world' and location is not None and location !='-99':
@@ -1235,10 +1236,10 @@ while True:
                 exo_list.sort()
                 window['-LOCATIONS-'].update(exo_list)               
     
-            except:
-                logging.debug('Full system chosen but no mainworld selected (1062)')
+            except Exception as e:
+                logging.debug(f'Full system chosen but no mainworld selected {e}')
         else:
-            logging.debug('Full system chosen but no mainworld selected (1064)')
+            logging.debug('Full system chosen but no mainworld selected (else statement)')
 
     elif event == '-MAP-':
         try:  
@@ -1303,8 +1304,8 @@ while True:
                 logging.debug('url: '+ url)
                 webbrowser.open(url)
      
-            except:
-                logging.debug('World Map info not available')
+            except Exception as e:
+                logging.debug(f'World Map info not available {e}')
 
         else:
             logging.debug('cancelled world map')
