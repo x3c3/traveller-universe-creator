@@ -1,6 +1,6 @@
 def generate_stars(db_name,decisions_provided):
 
-# v1.0.1 PBG Updated to include binaries
+# v1.1.0 2024-05-25 PBG Updated to include binaries
 
 # Sector Generation
 

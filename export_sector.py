@@ -10,7 +10,7 @@ def export_sector(db, ss):
     v 1.1.0b  2024-05-24  Added error variables to debug log in try/excepts   
     v 1.1.0c  2024-05-24  Added style class to hold all styles
     v 1.1.0d  2024-05-24  Cleaned up code - removed global variables, separated main program
-    v 1.1.0e  2024-05-25  CLeaned up code to meet PEP best practices
+    v 1.1.0e  2024-05-25  Cleaned up code to meet PEP best practices
     """
 
     #   IMPORTS
@@ -70,11 +70,6 @@ def export_sector(db, ss):
 
         def _get_image_path(self) -> str:
             return 'covers/' + self.subsector + '.jpg'
-
-    class DbDetails:
-        def __init__(self, conn, cursor):
-            self.conn = None
-            self.cursor = None
 
     class SystemDetails:
         def __init__(self,
@@ -1171,7 +1166,7 @@ def export_sector(db, ss):
 
         # Begin work on individual orbital bodies details
 
-        # Grab the pre-loaded UWPs into a UWP dictionary with location_orbit as key
+        # Grab the preloaded UWPs into a UWP dictionary with location_orbit as key
         loc_orbit_list = df['location_orbit'].to_list()
         name_list = df['system_name'].to_list()
         uwp_list = df['uwp'].to_list()

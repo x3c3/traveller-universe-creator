@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-v 1.0.0 2022-11-17 
+v 1.0.0 2022-11-17
+v 1.0.1 2024-05-25 - updated version number to reflect changes in first_in_generation
 """
 import PySimpleGUI as sg
 
@@ -70,7 +71,7 @@ layout = [
 ]
 
 # Create the Window
-window = sg.Window("""Bartleby's Sector Builder v1.0""", layout)
+window = sg.Window("""Bartleby's Sector Builder v1.1""", layout)
 
 
 # Event Loop to process "events" and get the "values" of the inputs
