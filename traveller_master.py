@@ -13,7 +13,7 @@ def make_sector_master(decisions_provided):
     from journey_data import build_journey_table
     from routes_short_path import create_route_xml
     from culture import create_culture_stats
-    import PySimpleGUI as sg
+    import FreeSimpleGUI as sg
 
     
     seed_number = decisions_provided.random_seed
