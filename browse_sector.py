@@ -12,28 +12,25 @@ v 1.1.0d  2024-05-11  Moved remarks list to traveller_functions
 v 1.1.0e  2024-05-24  Added error variables to debug log in try/excepts      
 """
 
-import logging
-import warnings
-import platform
-
-import PySimpleGUI as sg
-import sqlite3
-import pandas as pd
-
-from PIL import Image, ImageTk
-import os
 import io
-
+import logging
+import os
+import platform
+import sqlite3
+import warnings
 import webbrowser
+
+import FreeSimpleGUI as sg
 import matplotlib
 import matplotlib.pyplot as plt
+import pandas as pd
+from PIL import Image, ImageTk
+from matplotlib import style
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-from matplotlib import style
 
-from traveller_functions import tohex, get_description, get_remarks_list
 from traveller_functions import Api_image_parameters, download_image_via_api
-
+from traveller_functions import tohex, get_description, get_remarks_list
 from export_sector import export_sector
 
 try:    
@@ -682,7 +679,7 @@ def make_win5(db):
                 
                 logging.debug(f'SS value =  {ss}')
                     
-                export_ss_to_pdf(db,ss)
+                export_sector(db,ss)
                 break
                 
                 

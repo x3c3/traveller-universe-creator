@@ -3,7 +3,7 @@
 v 1.0.0 2022-11-17
 v 1.0.1 2024-05-25 - updated version number to reflect changes in first_in_generation
 """
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 import logging
 import warnings

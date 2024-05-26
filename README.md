@@ -1,17 +1,26 @@
 traveller-universe-creator 
 aka Bartleby's Sector Builder
 
-v 1.1x - 2024-05-21 - API Mapping and PDF Export features
+v 1.1.0 - 2024-05-25
 
-Upgrade is in progress.
+- Changed from PySimpleGUI to FreeSimpleGUI (until I better understand licensing requirements)
+- Added browser functionality to use APIs from travellerworlds.com and travellermap.com
+- Added "Rings" value to browser
+- Updated PBG value at creation to include PBG numbers beyond primary system
+- moved text tables to tables directory
+- Using Python 3.12
+- This is the up to date list of all required imports:
 
-If you wish to use the last stable version then use the EXE install.
+	pandas          v1.4.2 or higher
+	numpy           v1.22.3 or higher
+	networkx        v2.8.4 or higher
+	matplotlib      v3.5.2 or higher
+	pillow          v9.2 or higher
+	PyPDF2		v3.0.1 (latest at this time)
+	reportlab	v4.2.0 (latest at this time)
+	FreeSimpleGUI	v5.1.0 (latest at this time)
 
-The other python scripts are changing almost daily.
-
-NOTE - new imports required for using the Sector Export feature:
- - PyPDF2 3.0.1
- - reportlab 4.2.0
+- NOTE - install_sector.exe file does NOT yet include v1.1.0. Coming soon.
 
 
 v 1.0 - 2022-11-12
