@@ -11,14 +11,14 @@ v 1.1.0 - 2024-05-25
 - Using Python 3.12
 - This is the up to date list of all required imports:
 
-	-pandas          v1.4.2 or higher
-	-numpy           v1.22.3 or higher
-	-networkx        v2.8.4 or higher
-	-matplotlib      v3.5.2 or higher
-	-pillow          v9.2 or higher
-	-PyPDF2		v3.0.1 (latest at this time)
-	-reportlab	v4.2.0 (latest at this time)
-	-FreeSimpleGUI	v5.1.0 (latest at this time)
+    - pandas          v1.4.2 or higher
+    - numpy           v1.22.3 or higher
+    - networkx        v2.8.4 or higher
+    - matplotlib      v3.5.2 or higher
+    - pillow          v9.2 or higher
+    - PyPDF2		v3.0.1 (latest at this time)
+    - reportlab	v4.2.0 (latest at this time)
+    - FreeSimpleGUI	v5.1.0 (latest at this time)
 
 - NOTE: install_sector.exe file does NOT yet include v1.1.0. Coming soon.
 
