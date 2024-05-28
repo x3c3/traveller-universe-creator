@@ -13,7 +13,7 @@ The program generates an entire sci-fi sector of stars, planets, moons using "re
 **How to Run:**
 
 Option 1:  From the installer
-   - Download and run the install_bartleby_sector_builder_v.101.exe file.
+   - Download and run the install_bartleby_sector_builder_v.1.1.0.exe file.
    - Once installed:
      - run generate_menu.exe to generate a DB
        - find generated DBs in /sector_db
