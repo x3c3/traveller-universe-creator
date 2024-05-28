@@ -9,7 +9,8 @@ v 1.1.0b  2024-05-04  1. Fixed another error when clicking Full System without m
                       2. Added confirmation windows for traveller map buttons  
 v 1.1.0c  2024-05-05  Added ring information for each orbital body          
 v 1.1.0d  2024-05-11  Moved remarks list to traveller_functions    
-v 1.1.0e  2024-05-24  Added error variables to debug log in try/excepts      
+v 1.1.0e  2024-05-24  Added error variables to debug log in try/excepts
+v 1.1.0f  2024-05-28  Fixed ring popup, and changed jump distance from Mm to MKm.
 """
 
 import io
@@ -200,8 +201,8 @@ def update_stats(loc_info,system_info,detail_info,economic_info,m_labels,s_label
                     if d == 'mainworld_calc':
                         d_value = f'{d_value[0]:,}'
                     elif d == 'jump_point_distance':
-                        d_value = round(int(d_value[0]))
-                        d_value = f'{d_value:,}'
+                        #d_value = round(int(d_value[0]))
+                        d_value = f'{d_value[0]:,}'
                     else: 
                         d_value = d_value[0]
                         
@@ -900,8 +901,9 @@ d_tooltips = ['Planet, Impact Moon, Natural Moon',
               'from GURPS First In',
               'from Architect of Worlds',
               'from Architect of Worlds',
+              'ring around planet',
               'in AUs',
-              'in MegaMeters (millions of meters)',
+              'in Mega Kilometers (millions of km)',
               'Stellar gravity impact to jump distance',
               'Time to jump point (in hours) with 1G ship',
               'Time to jump point (in hours) with 2G ship',
@@ -991,7 +993,7 @@ while True:
         
 
         df_details['atmos_pressure'] = round(df_details['atmos_pressure'],2)
-        df_details['jump_point_distance'] = round(df_details['jump_point_distance'],1)# otherwise crazy decimals added
+        df_details['jump_point_distance'] = round(df_details['jump_point_distance']/1000,2)# otherwise crazy decimals added
         df_details['mainworld_calc'] = round(df_details['mainworld_calc'],2)            
 
 
@@ -1048,7 +1050,7 @@ while True:
             logging.debug(f'DB Exception occured: {e}')
 
         df_exo_details['atmos_pressure'] = round(df_exo_details['atmos_pressure'],2)
-        df_exo_details['jump_point_distance'] = round(df_exo_details['jump_point_distance'],1)
+        df_exo_details['jump_point_distance'] = round(df_exo_details['jump_point_distance']/1000,2)
         df_exo_details['mainworld_calc'] = round(df_exo_details['mainworld_calc'],2) 
 
 
