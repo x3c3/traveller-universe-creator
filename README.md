@@ -1,63 +1,65 @@
-traveller-universe-creator 
-aka Bartleby's Sector Builder
+# traveller-universe-creator 
 
-v 1.1.0 - 2024-05-25
+## aka Bartleby's Sector Builder
+
+**v 1.1.0 - 2024-05-28**
+
+Full release complete, including install exe.
+
+**Program Purpose:**
+
+The program generates an entire sci-fi sector of stars, planets, moons using "realistic" scientific models
+
+**How to Run:**
+
+Option 1:  From the installer
+   - Download and run the install_bartleby_sector_builder_v.101.exe file.
+   - Once installed:
+     - run generate_menu.exe to generate a DB
+       - find generated DBs in /sector_db
+     - run browse_sector.exe to view a sector
+       - optionally use a DB browser (like https://sqlitebrowser.org/) to look at every piece of data for each planet/system
+   - **please note:**  the example-66 database in the /sector_db directory MUST be there for browse_sector to work.  Do not remove it.
+ 
+Option 2: From the code - requires python run time environment
+   - run generate_menu.exe to generate a DB
+     - find generated DBs in /sector_db
+   - run browse_sector.exe to view a sector
+     - optionally use a DB browser (like https://sqlitebrowser.org/) to look at every piece of data for each planet/system
+   - **please note:**  the example-66 database in the /sector_db directory MUST be there for browse_sector to work.  Do not remove it.
+ 
+Requirements for Option 2 (non-EXE installs):
+
+  - Programmed using Python 3.12
+
+  - This is the up to date list of all required imports:
+
+      - pandas          v1.4.2 or higher
+      - numpy           v1.22.3 or higher
+      - networkx        v2.8.4 or higher
+      - matplotlib      v3.5.2 or higher
+      - pillow          v9.2 or higher
+      - PyPDF2		v3.0.1 (latest at this time)
+      - reportlab	v4.2.0 (latest at this time)
+      - FreeSimpleGUI	v5.1.0 (latest at this time)
+
+
+
+**v 1.1.0 - Upgrades**
 
 - Changed from PySimpleGUI to FreeSimpleGUI (until I better understand licensing requirements)
 - Added browser functionality to use APIs from travellerworlds.com and travellermap.com
 - Added "Rings" value to browser
 - Updated PBG value at creation to include PBG numbers beyond primary system
 - moved text tables to tables directory
-- Using Python 3.12
-- This is the up to date list of all required imports:
-
-    - pandas          v1.4.2 or higher
-    - numpy           v1.22.3 or higher
-    - networkx        v2.8.4 or higher
-    - matplotlib      v3.5.2 or higher
-    - pillow          v9.2 or higher
-    - PyPDF2		v3.0.1 (latest at this time)
-    - reportlab	v4.2.0 (latest at this time)
-    - FreeSimpleGUI	v5.1.0 (latest at this time)
-
-- NOTE: install_sector.exe file does NOT yet include v1.1.0. Coming soon.
 
 
-v 1.0 - 2022-11-12
 
-The goal is to generate an entire Traveller sector of stars, planets, moons using "realistic" scientific models
+**FAQ:**
 
-Description:
-
-After running the generate_menu.py program, four files will be produced and placed in the /sector_db folder.
-  - A SQLite database with all of the system data (titled with the name of the sector with the extension .db)
-  - A tab delimited text file for system data import into the TravellerMap website (title + '_tab.txt')
-  - Text file for route data import into the TravellerMap website (title + '-routes.txt')
-  - A file named 'sec_m01_m01.dat' for import into Shawn Driscoll's excellent: https://github.com/ShawnDriscoll/PyMapGen
-
-How to Run?
-
-Option 1:  From the installer
- - download and run the install_sector.exe file - it will export everything you need in the directory you choose
- - run generate_menu.exe to generate a DB
- - find generated DBs in /sector_db
- - run browse_sector.exe to view a sector
- - optionally use a DB browser (like https://sqlitebrowser.org/) to look at every piece of data for each planet/system
- - please note:  the example-66 database in the /sector_db directory MUST be there for browse_sector to work.  Do not remove it.
- 
- 
-Option 2: From the code - requires python environment
- - environment imports are below in the FAQ
- - run generate_menu.py to generate a DB
- - find generated DBs in /sector_db
- - run browse_sector.py to view a sector
- - optionally use a DB browser (like https://sqlitebrowser.org/) to look at every piece of data for each planet/system
- - please note:  the example-66 database in the /sector_db directory MUST be there for browse_sector to work.  Do not remove it.
-
-FAQ:
 Q:  What does the program do?
 
-A:  After setting the parameters you want, it produces a traveller sector and provides the information in separate files explained above.
+A:  After setting the parameters you want, it produces a traveller/cepheus sector and provides the information in separate files explained above.
 
 The text files can be used to visualize the sector using https://travellermap.com/ or PyMapGen at https://github.com/ShawnDriscoll/PyMapGen
 
@@ -69,21 +71,6 @@ Q:  What Traveller rules does it use?
 A:  It uses mostly GURPS First In for the science stuff (like stellar details, and planet temperature).  
     T5 rules for the Traveller stuff (like law level and influence scores).
     I have also been using parts of Architect of Worlds (a modern update to First In by the same creator)
-
-Q:  How do you run it?
-
-A:  Run the generate_menu to create a sector.  Run the browse_sector to explore the sectors you create.
-
-Q:  What imports do I need?
-
-A:
-	PySimpleGUI     v4.60.3
-	pandas          v1.4.2
-	numpy           v1.22.3
-	networkx        v2.8.4
-	matplotlib      v3.5.2
-	pillow          v9.2
-	pyInstaller	v4.8
 
 Q:  Where do the planet names come from
 
